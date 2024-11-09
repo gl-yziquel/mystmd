@@ -1,5 +1,44 @@
 # myst-execute
 
+## 0.1.1
+
+### Patch Changes
+
+- ce3c11c: Update inter-version deps
+
+## 0.1.0
+
+### Minor Changes
+
+- a2519bb3: Add skip-execution tag support
+
+### Patch Changes
+
+- myst-common@1.6.1
+
+## 0.0.9
+
+### Patch Changes
+
+- 41d8f35e: Fix overzealous missing kernelspec warning
+
+## 0.0.8
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - myst-cli-utils@2.0.10
+  - myst-common@1.5.1
+
+## 0.0.7
+
+### Patch Changes
+
+- 28642fe: Add error messages for failed kernel execution
+- Updated dependencies [0576d5ad]
+  - myst-common@1.5.0
+
 ## 0.0.6
 
 ### Patch Changes

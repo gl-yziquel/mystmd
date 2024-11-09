@@ -4,30 +4,39 @@ import { createHash } from 'node:crypto';
 import { tic } from 'myst-cli-utils';
 import { TexParser } from 'tex-to-myst';
 import { VFile } from 'vfile';
+import { doi } from 'doi-utils';
 import type { GenericParent } from 'myst-common';
-import { RuleId, toText } from 'myst-common';
+import { RuleId, toText, fileError, fileWarn } from 'myst-common';
 import type { PageFrontmatter } from 'myst-frontmatter';
-import { validatePageFrontmatter } from 'myst-frontmatter';
+import { validatePageFrontmatter, fillProjectFrontmatter } from 'myst-frontmatter';
 import { SourceFileKind } from 'myst-spec-ext';
 import { frontmatterValidationOpts, getPageFrontmatter } from '../frontmatter.js';
 import type { ISession, ISessionWithCache } from '../session/types.js';
 import { castSession } from '../session/cache.js';
-import { warnings, watch } from '../store/reducers.js';
+import { config, projects, warnings, watch } from '../store/reducers.js';
 import type { PreRendererData, RendererData } from '../transforms/types.js';
 import { logMessagesFromVFile } from '../utils/logging.js';
+import { isValidFile, parseFilePath } from '../utils/resolveExtension.js';
 import { addWarningForFile } from '../utils/addWarningForFile.js';
 import { loadBibTeXCitationRenderers } from './citations.js';
 import { parseMyst } from './myst.js';
-import { processNotebook } from './notebook.js';
+import { processNotebookFull } from './notebook.js';
 import { selectors } from '../store/index.js';
+import { defined, incrementOptions, validateObjectKeys, validateEnum } from 'simple-validators';
+import type { ValidationOptions } from 'simple-validators';
 
-type LoadFileOptions = { preFrontmatter?: Record<string, any>; keepTitleNode?: boolean };
+type LoadFileOptions = {
+  preFrontmatter?: Record<string, any>;
+  keepTitleNode?: boolean;
+  kind?: SourceFileKind;
+};
 
 export type LoadFileResult = {
   kind: SourceFileKind;
   mdast: GenericParent;
   frontmatter?: PageFrontmatter;
   identifiers?: string[];
+  widgets?: Record<string, any>;
 };
 
 function checkCache(cache: ISessionWithCache, content: string, file: string) {
@@ -54,7 +63,7 @@ export function loadMdFile(
     opts?.preFrontmatter,
     opts?.keepTitleNode,
   );
-  return { kind: SourceFileKind.Article, mdast, frontmatter, identifiers };
+  return { kind: opts?.kind ?? SourceFileKind.Article, mdast, frontmatter, identifiers };
 }
 
 export async function loadNotebookFile(
@@ -65,15 +74,24 @@ export async function loadNotebookFile(
 ): Promise<LoadFileResult> {
   const vfile = new VFile();
   vfile.path = file;
-  const mdast = await processNotebook(session, file, content);
-  const { frontmatter, identifiers } = getPageFrontmatter(
+  const {
+    mdast,
+    frontmatter: nbFrontmatter,
+    widgets,
+  } = await processNotebookFull(session, file, content);
+  const { frontmatter: cellFrontmatter, identifiers } = getPageFrontmatter(
     session,
     mdast,
     vfile,
     opts?.preFrontmatter,
     opts?.keepTitleNode,
   );
-  return { kind: SourceFileKind.Notebook, mdast, frontmatter, identifiers };
+  const frontmatter = fillProjectFrontmatter(
+    cellFrontmatter,
+    nbFrontmatter,
+    frontmatterValidationOpts(vfile),
+  );
+  return { kind: opts?.kind ?? SourceFileKind.Notebook, mdast, frontmatter, identifiers, widgets };
 }
 
 export function loadTexFile(
@@ -99,7 +117,99 @@ export function loadTexFile(
     frontmatterValidationOpts(vfile),
   );
   logMessagesFromVFile(session, vfile);
-  return { kind: SourceFileKind.Article, mdast: tex.ast as GenericParent, frontmatter };
+  return {
+    kind: opts?.kind ?? SourceFileKind.Article,
+    mdast: tex.ast as GenericParent,
+    frontmatter,
+  };
+}
+
+export function mystJSONValidationOpts(
+  vfile: VFile,
+  opts?: { property?: string; ruleId?: RuleId },
+): ValidationOptions {
+  return {
+    property: opts?.property ?? 'file',
+    file: vfile.path,
+    messages: {},
+    errorLogFn: (message: string) => {
+      fileError(vfile, message, { ruleId: opts?.ruleId ?? RuleId.mystJsonValid });
+    },
+    warningLogFn: (message: string) => {
+      fileWarn(vfile, message, { ruleId: opts?.ruleId ?? RuleId.mystJsonValid });
+    },
+  };
+}
+
+function validateMySTJSON(
+  input: any,
+  opts: ValidationOptions,
+): { mdast: GenericParent; kind: SourceFileKind; frontmatter: PageFrontmatter } | undefined {
+  const value = validateObjectKeys(
+    input,
+    { required: ['mdast'], optional: ['kind', 'frontmatter'] },
+    opts,
+  );
+  if (value === undefined) {
+    return undefined;
+  }
+
+  const { mdast } = value;
+
+  let kind: undefined | SourceFileKind;
+  if (defined(value.kind)) {
+    kind = validateEnum<SourceFileKind>(value.kind, {
+      ...incrementOptions('kind', opts),
+      enum: SourceFileKind,
+    });
+  }
+  let frontmatter: undefined | PageFrontmatter;
+  if (defined(value.frontmatter)) {
+    frontmatter = validatePageFrontmatter(value.frontmatter, incrementOptions('frontmatter', opts));
+  }
+
+  return {
+    mdast,
+    kind: kind ?? SourceFileKind.Article,
+    frontmatter: frontmatter ?? {},
+  };
+}
+
+export function loadMySTJSON(
+  session: ISession,
+  content: string,
+  file: string,
+  opts?: LoadFileOptions,
+) {
+  const vfile = new VFile();
+  vfile.path = file;
+
+  const rawData = JSON.parse(content);
+  const result = validateMySTJSON(rawData, mystJSONValidationOpts(vfile));
+  if (result === undefined) {
+    logMessagesFromVFile(session, vfile);
+    throw new Error('Unable to load JSON file: error during validation');
+  } else {
+    const { mdast, kind, frontmatter: pageFrontmatter } = result;
+    const { frontmatter, identifiers } = getPageFrontmatter(
+      session,
+      mdast,
+      vfile,
+      { ...pageFrontmatter, ...opts?.preFrontmatter },
+      opts?.keepTitleNode,
+    );
+    logMessagesFromVFile(session, vfile);
+    return { mdast, kind: opts?.kind ?? kind, frontmatter, identifiers };
+  }
+}
+
+function getLocation(file: string, projectPath?: string) {
+  let location = file;
+  if (projectPath) {
+    location = `/${path.relative(projectPath, file)}`;
+  }
+  // ensure forward slashes and not windows backslashes
+  return location.replaceAll('\\', '/');
 }
 
 /**
@@ -123,7 +233,7 @@ export async function loadFile(
   session: ISession,
   file: string,
   projectPath?: string,
-  extension?: '.md' | '.ipynb' | '.tex' | '.bib',
+  extension?: '.md' | '.ipynb' | '.tex' | '.bib' | '.myst.json',
   opts?: LoadFileOptions,
 ): Promise<PreRendererData | undefined> {
   await session.loadPlugins();
@@ -131,55 +241,60 @@ export async function loadFile(
   session.store.dispatch(warnings.actions.clearWarnings({ file }));
   const cache = castSession(session);
   let success = true;
-
-  let location = file;
-  if (projectPath) {
-    location = `/${path.relative(projectPath, file)}`;
-  }
-  // ensure forward slashes and not windows backslashes
-  location = location.replaceAll('\\', '/');
-
+  let pre: PreRendererData | undefined;
+  let successMessage: string | undefined;
   try {
     const content = fs.readFileSync(file).toString();
     const { sha256, useCache } = checkCache(cache, content, file);
     if (useCache) {
-      session.log.debug(toc(`loadFile: ${file} already loaded.`));
-      return cache.$getMdast(file)?.pre;
-    }
-    const ext = extension || path.extname(file).toLowerCase();
-    let loadResult: LoadFileResult | undefined;
-    switch (ext) {
-      case '.md': {
-        loadResult = loadMdFile(session, content, file, opts);
-        break;
+      successMessage = `loadFile: ${file} already loaded.`;
+      pre = cache.$getMdast(file)?.pre;
+    } else {
+      const ext = extension || parseFilePath(file).ext.toLowerCase();
+      let loadResult: LoadFileResult | undefined;
+      switch (ext) {
+        case '.md': {
+          loadResult = loadMdFile(session, content, file, opts);
+          break;
+        }
+        case '.ipynb': {
+          loadResult = await loadNotebookFile(session, content, file, opts);
+          break;
+        }
+        case '.tex': {
+          loadResult = loadTexFile(session, content, file, opts);
+          break;
+        }
+        case '.bib': {
+          const renderers = await loadBibTeXCitationRenderers(session, file);
+          cache.$citationRenderers[file] = renderers;
+          Object.entries(renderers).forEach(([id, renderer]) => {
+            const normalizedDOI = doi.normalize(renderer.getDOI())?.toLowerCase();
+            if (!normalizedDOI || cache.$doiRenderers[normalizedDOI]) return;
+            cache.$doiRenderers[normalizedDOI] = { id, render: renderer };
+          });
+          break;
+        }
+        case '.myst.json': {
+          loadResult = loadMySTJSON(session, content, file);
+          break;
+        }
+        default:
+          addWarningForFile(session, file, 'Unrecognized extension', 'error', {
+            ruleId: RuleId.mystFileLoads,
+          });
+          session.log.info(
+            `"${file}": Please rerun the build with "-c" to ensure the built files are cleared.`,
+          );
+          success = false;
       }
-      case '.ipynb': {
-        loadResult = await loadNotebookFile(session, content, file, opts);
-        break;
-      }
-      case '.tex': {
-        loadResult = loadTexFile(session, content, file, opts);
-        break;
-      }
-      case '.bib': {
-        const renderer = await loadBibTeXCitationRenderers(session, file);
-        cache.$citationRenderers[file] = renderer;
-        break;
-      }
-      default:
-        addWarningForFile(session, file, 'Unrecognized extension', 'error', {
-          ruleId: RuleId.mystFileLoads,
+      if (loadResult) {
+        pre = { file, location: getLocation(file, projectPath), ...loadResult };
+        cache.$setMdast(file, {
+          sha256,
+          pre,
         });
-        session.log.info(
-          `"${file}": Please rerun the build with "-c" to ensure the built files are cleared.`,
-        );
-        success = false;
-    }
-    if (loadResult) {
-      cache.$setMdast(file, {
-        sha256,
-        pre: { file, location, ...loadResult },
-      });
+      }
     }
   } catch (error) {
     session.log.debug(`\n\n${(error as Error)?.stack}\n\n`);
@@ -188,8 +303,109 @@ export async function loadFile(
     });
     success = false;
   }
-  if (success) session.log.debug(toc(`loadFile: loaded ${file} in %s.`));
-  return cache.$getMdast(file)?.pre;
+  if (success) session.log.debug(successMessage ?? toc(`loadFile: loaded ${file} in %s.`));
+  if (pre?.frontmatter) {
+    pre.frontmatter.parts = await loadFrontmatterParts(
+      session,
+      file,
+      'parts',
+      pre.frontmatter,
+      projectPath,
+    );
+  }
+  return pre;
+}
+
+export async function loadFrontmatterParts(
+  session: ISession,
+  file: string,
+  property: string,
+  frontmatter: PageFrontmatter,
+  projectPath?: string,
+) {
+  const { parts, ...pageFrontmatter } = frontmatter;
+  const vfile = new VFile();
+  vfile.path = file;
+  const modifiedParts: [string, string[]][] = await Promise.all(
+    Object.entries(parts ?? {}).map(async ([part, contents]) => {
+      let partFile: string;
+      if (contents.length === 1 && isValidFile(contents[0])) {
+        partFile = path.resolve(path.dirname(file), contents[0]);
+        if (!fs.existsSync(partFile)) {
+          fileWarn(vfile, `Part file does not exist: ${partFile}`);
+          return [part, contents];
+        }
+        await loadFile(session, partFile, projectPath, undefined, {
+          kind: SourceFileKind.Part,
+          /** Frontmatter from the source page is prioritized over frontmatter from the part file itself */
+          preFrontmatter: pageFrontmatter,
+        });
+        session.store.dispatch(
+          watch.actions.addLocalDependency({
+            path: file,
+            dependency: partFile,
+          }),
+        );
+        const proj = selectors.selectLocalProject(session.store.getState(), projectPath ?? '.');
+        if (proj?.index === partFile) {
+          fileWarn(vfile, `index file is also used as a part: ${partFile}`);
+        } else if (proj) {
+          const filteredPages = proj.pages.filter((page) => {
+            const { file: pageFile, implicit } = page as any;
+            if (!pageFile) return true;
+            if (pageFile !== partFile) return true;
+            if (!implicit) {
+              fileWarn(vfile, `project file is also used as a part: ${partFile}`);
+            }
+            return !implicit;
+          });
+          const newProj = { ...proj, pages: filteredPages };
+          session.store.dispatch(projects.actions.receive(newProj));
+        }
+      } else {
+        const cache = castSession(session);
+        partFile = `${path.resolve(file)}#${property}.${part}`;
+        if (contents.length !== 1 || contents[0] !== partFile || !cache.$getMdast(contents[0])) {
+          const mdast = {
+            type: 'root',
+            children: contents.map((content) => {
+              const root = parseMyst(session, content, file);
+              return {
+                type: 'block',
+                data: { part },
+                children: root.children,
+              };
+            }),
+          };
+          cache.$setMdast(partFile, {
+            pre: {
+              kind: SourceFileKind.Part,
+              file: partFile,
+              mdast,
+              // Same frontmatter as the containing page
+              frontmatter: { ...pageFrontmatter },
+              location: getLocation(file, projectPath),
+            },
+          });
+        }
+        session.store.dispatch(
+          config.actions.receiveFilePart({
+            partFile,
+            file,
+          }),
+        );
+      }
+      session.store.dispatch(
+        config.actions.receiveProjectPart({
+          partFile,
+          path: projectPath ?? '.',
+        }),
+      );
+      return [part, [partFile]];
+    }),
+  );
+  logMessagesFromVFile(session, vfile);
+  return Object.fromEntries(modifiedParts);
 }
 
 /**

@@ -200,10 +200,10 @@ export async function getCitation(
     return null;
   }
   try {
-    const renderer = await getCitationRenderers(data);
+    const renderer = getCitationRenderers(data);
     const id = Object.keys(renderer)[0];
     const render = renderer[id];
-    return { id, render };
+    return { id, render, remote: true };
   } catch (error) {
     fileError(
       vfile,
@@ -243,47 +243,71 @@ export async function transformLinkedDOIs(
     citeDois.push(node as Cite);
   });
   if (linkedDois.length === 0 && citeDois.length === 0) return renderer;
-  session.log.debug(
-    `Found ${plural('%s DOI(s)', linkedDois.length + citeDois.length)} to auto link.`,
-  );
+  const total = linkedDois.length + citeDois.length;
+  session.log.debug(`Found ${plural('%s DOI(s)', total)} to auto link.`);
+  const logData = { total, done: false };
+  setTimeout(() => {
+    if (!logData.done) {
+      session.log.info(
+        `⏳ Waiting to resolve up to ${plural('%s DOI(s)', logData.total)} from doi.org...`,
+      );
+    }
+  }, 5000);
   let number = 0;
+  // Currently doi.org is strictly rate limiting their requests
   await Promise.all([
-    ...linkedDois.map(async (node) => {
-      let cite: SingleCitationRenderer | null = doiRenderer[node.url];
-      if (!cite) {
-        cite = await getCitation(session, vfile, node.url, node);
-        if (cite) number += 1;
-        else return false;
-      }
-      doiRenderer[node.url] = cite;
-      const label = cite.render.getLabel();
-      renderer[label] = cite.render;
-      const citeNode = node as unknown as Cite;
-      citeNode.type = 'cite';
-      citeNode.kind = 'narrative';
-      citeNode.label = label;
-      if (doi.validate(toText(citeNode.children))) {
-        // If the link text is the DOI, update with a citation in a following pass
-        citeNode.children = [];
-      }
-      return true;
-    }),
-    ...citeDois.map(async (node) => {
-      let cite: SingleCitationRenderer | null = doiRenderer[node.label];
-      if (!cite) {
-        cite = await getCitation(session, vfile, node.label, node);
-        if (cite) number += 1;
-        else return false;
-      }
-      doiRenderer[node.label] = cite;
-      const label = cite.render.getLabel();
-      renderer[label] = cite.render;
-      node.label = label;
-      return true;
-    }),
+    ...linkedDois.map((node) =>
+      session.doiLimiter(async () => {
+        const normalized = doi.normalize(node.url)?.toLowerCase();
+        if (!normalized) return false;
+        let cite: SingleCitationRenderer | null = doiRenderer[normalized];
+        if (!cite) {
+          cite = await getCitation(session, vfile, node.url, node);
+          if (cite) number += 1;
+          else return false;
+        }
+        const label = cite.render.getLabel();
+        if (cite.remote) {
+          renderer[label] = cite.render;
+        }
+        doiRenderer[normalized] = cite;
+        const citeNode = node as unknown as Cite;
+        citeNode.type = 'cite';
+        citeNode.kind = 'narrative';
+        citeNode.label = label;
+        citeNode.identifier = node.url;
+        if (doi.validate(toText(citeNode.children))) {
+          // If the link text is the DOI, update with a citation in a following pass
+          citeNode.children = [];
+        }
+        return true;
+      }),
+    ),
+    ...citeDois.map((node) =>
+      session.doiLimiter(async () => {
+        const normalized = doi.normalize(node.label)?.toLowerCase();
+        if (!normalized) return false;
+        let cite: SingleCitationRenderer | null = doiRenderer[normalized];
+        if (!cite) {
+          cite = await getCitation(session, vfile, node.label, node);
+          if (cite) number += 1;
+          else return false;
+        }
+        const label = cite.render.getLabel();
+        if (cite.remote) {
+          renderer[label] = cite.render;
+        }
+        doiRenderer[normalized] = cite;
+        node.label = label;
+        return true;
+      }),
+    ),
   ]);
+  logData.done = true;
   if (number > 0) {
-    session.log.info(toc(`🪄  Linked ${number} DOI${number > 1 ? 's' : ''} in %s for ${path}`));
+    session.log.info(
+      toc(`🪄  Linked ${plural('%s DOI(s)', number)} from doi.org in %s for ${path}`),
+    );
   }
   return renderer;
 }

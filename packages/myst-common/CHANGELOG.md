@@ -1,5 +1,134 @@
 # myst-common
 
+## 1.7.4
+
+### Patch Changes
+
+- myst-frontmatter@1.7.4
+
+## 1.7.3
+
+### Patch Changes
+
+- 2bce565: Add `slugToUrl` function that changes from a myst slug to an equivalent url
+  - myst-frontmatter@1.7.3
+
+## 1.7.2
+
+### Patch Changes
+
+- 4a3ee6db: Consume frontmatter parts in static exports
+- 4a3ee6db: Load frontmatter parts as separate files for processing
+- Updated dependencies [897136f]
+- Updated dependencies [918223b8]
+- Updated dependencies [4a3ee6db]
+  - myst-frontmatter@1.7.2
+
+## 1.7.1
+
+### Patch Changes
+
+- Updated dependencies [3c65de0]
+- Updated dependencies [64a33837]
+- Updated dependencies [3c65de0]
+  - myst-frontmatter@1.7.1
+
+## 1.7.0
+
+### Patch Changes
+
+- myst-frontmatter@1.7.0
+
+## 1.6.1
+
+### Patch Changes
+
+- Updated dependencies [760e411]
+  - myst-frontmatter@1.6.1
+
+## 1.6.0
+
+### Patch Changes
+
+- 8ba7b73a: Add `ValidatedMystPlugin` to make types more strict
+- Updated dependencies [9c1b8c73]
+  - myst-frontmatter@1.6.0
+
+## 1.5.4
+
+### Patch Changes
+
+- Updated dependencies [85520edd]
+- Updated dependencies [da224b78]
+- Updated dependencies [e2b74f4d]
+  - myst-frontmatter@1.5.4
+
+## 1.5.3
+
+### Patch Changes
+
+- Updated dependencies [313b218]
+  - myst-frontmatter@1.5.3
+
+## 1.5.2
+
+### Patch Changes
+
+- 134598fd: Add index directives/roles to myst-cli
+- 3fd53be8: Add better validation and post-processing to JSON files
+- Updated dependencies [38a45645]
+  - myst-frontmatter@1.5.2
+
+## 1.5.1
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - myst-frontmatter@1.5.1
+
+## 1.5.0
+
+### Minor Changes
+
+- 0576d5ad: Add support for executable (IPC) plugins
+
+### Patch Changes
+
+- Updated dependencies [8c487991]
+- Updated dependencies [f6aa726c]
+- Updated dependencies [478c4d4f]
+  - myst-frontmatter@1.5.0
+
+## 1.4.7
+
+### Patch Changes
+
+- 1e2092dc: Fix typo in rule-id
+  - myst-frontmatter@1.4.7
+
+## 1.4.6
+
+### Patch Changes
+
+- Updated dependencies [4cea894]
+  - myst-frontmatter@1.4.6
+
+## 1.4.5
+
+### Patch Changes
+
+- Updated dependencies [ad969c37]
+  - myst-frontmatter@1.4.5
+
+## 1.4.4
+
+### Patch Changes
+
+- Updated dependencies [65ade89]
+- Updated dependencies [435c4329]
+  - myst-frontmatter@1.4.4
+
 ## 1.4.3
 
 ### Patch Changes
@@ -441,7 +570,7 @@
 
 ### Patch Changes
 
-- 184ad9f9: Move to https://github.com/executablebooks/mystmd
+- 184ad9f9: Move to https://github.com/jupyter-book/mystmd
 - 3fba7cb7: Modify extractPart to no longer support tags
 
 ## 0.0.4

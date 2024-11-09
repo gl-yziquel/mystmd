@@ -1,5 +1,104 @@
 # myst-frontmatter
 
+## 1.7.4
+
+## 1.7.3
+
+## 1.7.2
+
+### Patch Changes
+
+- 897136f: Nest external identifiers in frontmatter
+- 918223b8: Add pubmed identifiers to frontmatter
+- 4a3ee6db: Support parts in site config
+
+## 1.7.1
+
+### Patch Changes
+
+- 3c65de0: Add more frontmatter fields for different venue types
+- 64a33837: Allow custom licenses outside SPDX
+- 3c65de0: Deprecate biblio in favor of complete volume/issue objects
+
+## 1.7.0
+
+## 1.6.1
+
+### Patch Changes
+
+- 760e411: Enable site options on each page
+
+## 1.6.0
+
+### Minor Changes
+
+- 9c1b8c73: Make `name`, `display_name` soft-required fields for kernelspec
+
+## 1.5.4
+
+### Patch Changes
+
+- 85520edd: Allow for explicit ignoring of longer abbreviations
+- da224b78: Reduce scope of date parsing, and validate to ISO8601
+- e2b74f4d: Update licenses
+- Updated dependencies [da224b78]
+- Updated dependencies [85520edd]
+  - simple-validators@1.1.0
+
+## 1.5.3
+
+### Patch Changes
+
+- 313b218: Add dois to venue and biblio
+
+## 1.5.2
+
+### Patch Changes
+
+- 38a45645: Add CITATION.cff build target
+
+## 1.5.1
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - simple-validators@1.0.6
+  - myst-toc@0.1.2
+
+## 1.5.0
+
+### Patch Changes
+
+- 8c487991: Keep all contributors/affiliations until final page resolution
+- f6aa726c: Allow parts in project frontmatter
+- 478c4d4f: Extend (and deduplicate) lists when extending project frontmatter
+
+## 1.4.7
+
+## 1.4.6
+
+### Patch Changes
+
+- 4cea894: Combine site options when using config extend
+
+## 1.4.5
+
+### Patch Changes
+
+- ad969c37: Add tags to project frontmatter
+- Updated dependencies [20beec96]
+  - myst-toc@0.1.1
+
+## 1.4.4
+
+### Patch Changes
+
+- 65ade89: Math frontmatter coerces to object with name/description
+- 435c4329: Update licenses from spdx
+- Updated dependencies [65ade89]
+  - simple-validators@1.0.5
+
 ## 1.4.3
 
 ### Patch Changes
@@ -365,7 +464,7 @@
 
 ### Patch Changes
 
-- 184ad9f9: Move to https://github.com/executablebooks/mystmd
+- 184ad9f9: Move to https://github.com/jupyter-book/mystmd
 - 615c1441: Sessions are now aware of their build path (making things more consistent)
   For example, change the template location to the site working directory.
 

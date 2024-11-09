@@ -1,5 +1,140 @@
 # myst-config
 
+## 1.7.4
+
+### Patch Changes
+
+- myst-common@1.7.4
+- myst-frontmatter@1.7.4
+
+## 1.7.3
+
+### Patch Changes
+
+- Updated dependencies [2bce565]
+  - myst-common@1.7.3
+  - myst-frontmatter@1.7.3
+
+## 1.7.2
+
+### Patch Changes
+
+- 4a3ee6db: Support parts in site config
+- 4a3ee6db: Parse project-level parts to mdast
+- Updated dependencies [4a3ee6db]
+- Updated dependencies [897136f]
+- Updated dependencies [4a3ee6db]
+- Updated dependencies [918223b8]
+- Updated dependencies [4a3ee6db]
+  - myst-common@1.7.2
+  - myst-frontmatter@1.7.2
+
+## 1.7.1
+
+### Patch Changes
+
+- Updated dependencies [3c65de0]
+- Updated dependencies [64a33837]
+- Updated dependencies [3c65de0]
+  - myst-frontmatter@1.7.1
+
+## 1.7.0
+
+### Patch Changes
+
+- myst-frontmatter@1.7.0
+
+## 1.6.1
+
+### Patch Changes
+
+- Updated dependencies [760e411]
+  - myst-frontmatter@1.6.1
+
+## 1.6.0
+
+### Patch Changes
+
+- Updated dependencies [9c1b8c73]
+  - myst-frontmatter@1.6.0
+
+## 1.5.4
+
+### Patch Changes
+
+- Updated dependencies [85520edd]
+- Updated dependencies [da224b78]
+- Updated dependencies [e2b74f4d]
+- Updated dependencies [85520edd]
+  - myst-frontmatter@1.5.4
+  - simple-validators@1.1.0
+
+## 1.5.3
+
+### Patch Changes
+
+- Updated dependencies [313b218]
+  - myst-frontmatter@1.5.3
+
+## 1.5.2
+
+### Patch Changes
+
+- Updated dependencies [38a45645]
+  - myst-frontmatter@1.5.2
+
+## 1.5.1
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - simple-validators@1.0.6
+  - myst-frontmatter@1.5.1
+
+## 1.5.0
+
+### Minor Changes
+
+- 0576d5ad: Add support for executable (IPC) plugins
+
+### Patch Changes
+
+- Updated dependencies [8c487991]
+- Updated dependencies [f6aa726c]
+- Updated dependencies [478c4d4f]
+  - myst-frontmatter@1.5.0
+
+## 1.4.7
+
+### Patch Changes
+
+- myst-frontmatter@1.4.7
+
+## 1.4.6
+
+### Patch Changes
+
+- Updated dependencies [4cea894]
+  - myst-frontmatter@1.4.6
+
+## 1.4.5
+
+### Patch Changes
+
+- Updated dependencies [ad969c37]
+  - myst-frontmatter@1.4.5
+
+## 1.4.4
+
+### Patch Changes
+
+- Updated dependencies [65ade89]
+- Updated dependencies [65ade89]
+- Updated dependencies [435c4329]
+  - simple-validators@1.0.5
+  - myst-frontmatter@1.4.4
+
 ## 1.4.3
 
 ### Patch Changes
@@ -479,7 +614,7 @@
 
 ### Patch Changes
 
-- 184ad9f9: Move to https://github.com/executablebooks/mystmd
+- 184ad9f9: Move to https://github.com/jupyter-book/mystmd
 - Updated dependencies [184ad9f9]
 - Updated dependencies [615c1441]
   - myst-frontmatter@0.0.3

@@ -1,5 +1,23 @@
 # markdown-it-myst
 
+## 1.0.10
+
+### Patch Changes
+
+- c758f1b5: Directive option flag is always a boolean
+
+## 1.0.9
+
+### Patch Changes
+
+- 5ac2d0bc: Fix inline parsing for roles
+
+## 1.0.8
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+
 ## 1.0.7
 
 ### Patch Changes

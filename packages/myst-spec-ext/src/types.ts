@@ -23,6 +23,22 @@ import type {
 
 type Visibility = 'show' | 'hide' | 'remove';
 
+export type IndexEntry = {
+  entry: string;
+  subEntry?: {
+    value: string;
+    kind: 'entry' | 'see' | 'seealso';
+  };
+  emphasis?: boolean;
+};
+
+type Target = {
+  label?: string;
+  identifier?: string;
+  html_id?: string;
+  indexEntries?: IndexEntry[];
+};
+
 export type Delete = Parent & { type: 'delete' };
 export type Underline = Parent & { type: 'underline' };
 export type Smallcaps = Parent & { type: 'smallcaps' };
@@ -52,20 +68,15 @@ export type AlgorithmLine = Parent & {
   enumerator?: string;
 };
 
-export type InlineMath = SpecInlineMath & {
-  label?: string;
-  identifier?: string;
-};
+export type InlineMath = SpecInlineMath & Target;
 
 export type Math = SpecMath & {
   kind?: 'subequation';
   tight?: 'before' | 'after' | boolean;
 };
 
-export type MathGroup = {
+export type MathGroup = Target & {
   type: 'mathGroup';
-  label?: string;
-  identifier?: string;
   enumerated?: boolean;
   enumerator?: string;
   children: Math[];
@@ -96,29 +107,30 @@ export type TabItem = Parent & {
   selected?: boolean;
 };
 
-export type Heading = SpecHeading & {
-  html_id?: string;
-  implicit?: true;
-};
+export type Heading = SpecHeading &
+  Target & {
+    implicit?: true;
+  };
 
 export type Image = SpecImage & {
   urlSource?: string;
+  urlOptimized?: string;
   height?: string;
   placeholder?: boolean;
 };
 
-export type Iframe = {
+export type Iframe = Target & {
   type: 'iframe';
-  label?: string;
-  identifier?: string;
   src: string;
   width?: string;
   align?: Image['align'];
   class?: Image['class'];
+  children?: Image[];
 };
 
 export type Admonition = SpecAdmonition & {
   icon?: boolean;
+  open?: boolean;
 };
 
 export type Block = SpecBlock & { kind?: string; visibility?: Visibility };
@@ -173,6 +185,7 @@ export type InlineExpression = {
 export enum SourceFileKind {
   Article = 'Article',
   Notebook = 'Notebook',
+  Part = 'Part',
 }
 
 export type Dependency = {
@@ -224,7 +237,9 @@ export type Include = {
 export type Raw = {
   type: 'raw';
   lang?: string;
-  value: string;
+  tex?: string;
+  typst?: string;
+  value?: string;
   children?: (FlowContent | ListContent | PhrasingContent)[];
 };
 
@@ -236,25 +251,22 @@ export type Container = Omit<SpecContainer, 'kind'> & {
   parentEnumerator?: string;
 };
 
-export type Output = Node & {
-  type: 'output';
-  id?: string;
-  identifier?: string;
-  label?: string;
-  html_id?: string;
-  data?: any[]; // MinifiedOutput[]
-  visibility?: Visibility;
-  children?: (FlowContent | ListContent | PhrasingContent)[];
-};
+export type Output = Node &
+  Target & {
+    type: 'output';
+    id?: string;
+    data?: any[]; // MinifiedOutput[]
+    visibility?: Visibility;
+    children?: (FlowContent | ListContent | PhrasingContent)[];
+  };
 
-export type Aside = Node & {
-  type: 'aside';
-  kind?: 'sidebar' | 'margin' | 'topic';
-  children?: (FlowContent | ListContent | PhrasingContent)[];
-  identifier?: string;
-  label?: string;
-  class?: Image['class'];
-};
+export type Aside = Node &
+  Target & {
+    type: 'aside';
+    kind?: 'sidebar' | 'margin' | 'topic';
+    children?: (FlowContent | ListContent | PhrasingContent)[];
+    class?: Image['class'];
+  };
 
 export type CrossReference = SpecCrossReference & {
   urlSource?: string;
@@ -272,4 +284,53 @@ export type Link = SpecLink & {
   static?: true;
   protocol?: string;
   error?: true;
+};
+
+// Search types
+
+/**
+ * Hierarchy of headers in a document
+ */
+export type DocumentHierarchy = {
+  lvl1?: string;
+  lvl2?: string;
+  lvl3?: string;
+  lvl4?: string;
+  lvl5?: string;
+  lvl6?: string;
+};
+
+/**
+ * Base type for search records
+ */
+export type SearchRecordBase = {
+  hierarchy: DocumentHierarchy;
+  url: string;
+
+  position: number;
+};
+
+/**
+ * Record pertaining to section headings
+ */
+export type HeadingRecord = SearchRecordBase & {
+  type: keyof DocumentHierarchy;
+};
+
+/**
+ * Record pertaining to section content
+ */
+export type ContentRecord = SearchRecordBase & {
+  type: 'content';
+  content: string;
+};
+
+/**
+ * Indexed search record type
+ */
+export type SearchRecord = HeadingRecord | ContentRecord;
+
+export type MystSearchIndex = {
+  version: '1';
+  records: SearchRecord[];
 };

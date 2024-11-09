@@ -1,13 +1,11 @@
 ---
-title: Integrate Jupyter-based Computation
-short_title: Live Computation with Jupyter
+title: In-Browser Execution
+subtitle: Connecting Jupyter Kernels to your MyST website
 description: MyST allows you to connect a website directly to a Jupyter Kernel, enabling interactive computation on your page.
 thumbnail: thumbnails/integrating-jupyter.png
 ---
 
-MyST allows you to connect a website directly to a Jupyter Kernel, enabling interactive computation on your page.
-
-This allows you to do some amazing things with your MyST website like:
+MyST allows you to connect a website directly to a Jupyter Kernel, allowing you to do some amazing things with your website like:
 
 - Allow readers to recompute your notebooks for themselves, demonstrating the reproducibility of your work
 - Provide a new level of interactive content via `ipywidgets` and `ipywidgets` backed libraries such as `ipympl`, `ipyleaflet`, etc...
@@ -16,7 +14,7 @@ This allows you to do some amazing things with your MyST website like:
 
 ```{attention}
 Integrated Jupyter Computation is hot off the press and currently limited to pages that represent complete Jupyter notebooks.
-We are in active development and this feature should be considered `beta` - please help us out [report any issues that you find](https://github.com/executablebooks/mystmd/issues).
+We are in active development and this feature should be considered `beta` - please help us out [report any issues that you find](https://github.com/jupyter-book/mystmd/issues).
 
 Being able to connect a Jupyter-based figure or output in any website page to a kernel is still work in progress - but expected very soon. The remainder of the docs below are forward looking, watch for the 🚧 icons on headings that are still work in progress.
 ```
@@ -331,7 +329,7 @@ project:
   - When `false` (default) any server settings received from `binder` will be cached in local storage. On page refresh or future page load the save session info will be used provided the session is still activate and the max age (86400s) has not been exceeded
   - `false`
 * - `mathjaxUrl`
-  - Allows the default mathjax bindle loaded by the Juptyer Latex Typesetter to be changed
+  - Allows the default mathjax bundle loaded by the Jupyter Latex Typesetter to be changed
   - Mathjax 2.7.5 from `cdnjs.cloudflare`[^mathjax]
 * - `mathjaxConfig`
   - Allows the default mathjax configuration string to be changed

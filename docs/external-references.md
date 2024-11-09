@@ -102,7 +102,7 @@ It is also a machine-readable record that can be used for analyzing the cross-re
 MyST can integrate directly with other Sphinx documentation, which is used in many Python projects including the [standard library](https://docs.python.org/).
 This re-uses the reference specification defined by [the intersphinx plugin for Sphinx](https://www.sphinx-doc.org/en/master/usage/extensions/intersphinx.html).
 
-Similar to [MyST cross references](#myst-xref), use the `references` object to list Sphinx projects. For example, in the demonstration below we will load the Python 3.7 documentation and JupyterBook docs, both of which use sphinx and expose cross references through an `objects.inv` file.
+Similar to [MyST cross references](#myst-xref), use the `references` object to list Sphinx projects. For example, in the demonstration below we will load the Python 3.7 documentation and Jupyter Book docs, both of which use sphinx and expose cross references through an `objects.inv` file.
 
 (intersphinx-config)=
 
@@ -129,7 +129,7 @@ The behavior of these entries is identical to MyST cross references: the remote 
     : A reference to the reference documentation in Python.
   - [](xref:python#zipapp-specifying-the-interpreter)
 * - `[](xref:jupyterbook#content:references)`
-    : A reference to the JupyterBook documentation, that brings you directly to the reference,
+    : A reference to the Jupyter Book documentation, that brings you directly to the reference,
       as well as fills in the label text.
   - [](xref:jupyterbook#content:references)
 ```
@@ -158,7 +158,7 @@ As with any link, the text can be overridden using markdown link syntax `[text](
 
 The HTML IDs that are part of the documentation are not always the targets that are used in the documentation. The easiest way to find the target to use is to look at the source documentation in RST or MyST.
 
-Look for the `(target)=` syntax or `:label:` or `:name:` on a directive.
+Look for the `(target)=` syntax or `:label:` on a directive.
 
 MyST will warn you in the console if your target is not found.
 
@@ -224,17 +224,17 @@ Wikipedia links, like `https://fr.wikipedia.org/wiki/Croissant_(viennoiserie)` w
 
 ### Issues and Pull Requests
 
-MyST Markdown can directly link and show preview of GitHub issues and Pull Requests, for example, [#336](https://github.com/executablebooks/mystmd/issues/336) and [#87](https://github.com/executablebooks/myst-theme/pull/87). To enable this, just use a normal link to your
+MyST Markdown can directly link and show preview of GitHub issues and Pull Requests, for example, [#336](https://github.com/jupyter-book/mystmd/issues/336) and [#87](https://github.com/jupyter-book/myst-theme/pull/87). To enable this, just use a normal link to your
 
 ```markdown
-[#87](https://github.com/executablebooks/myst-theme/pull/87)
+[#87](https://github.com/jupyter-book/myst-theme/pull/87)
 ```
 
 If you do not include children for the link, then the default text will become `owner/repo#123`.
 
 ### Linking to Code
 
-MyST Markdown can directly integrate with links to GitHub to create hover-card information directly integrated into your MyST documents. For example, a link to the [linkTransforms](https://github.com/executablebooks/mystmd/blob/78d16ee1a/packages/myst-transforms/src/links/plugin.ts#L12-L28) plugin code shows a preview of the code. The code preview works for both multiple line numbers and highlighting [single lines](https://github.com/executablebooks/mystmd/blob/78d16ee1a/packages/myst-transforms/src/links/plugin.ts#L30), which shows the surrounding ten lines, with the referenced line highlighted. If you reference the [full file](https://github.com/executablebooks/mystmd/blob/78d16ee1a/packages/myst-transforms/src/links/plugin.ts) then the first ten lines of the file are shown in the preview.
+MyST Markdown can directly integrate with links to GitHub to create hover-card information directly integrated into your MyST documents. For example, a link to the [linkTransforms](https://github.com/jupyter-book/mystmd/blob/78d16ee1a/packages/myst-transforms/src/links/plugin.ts#L12-L28) plugin code shows a preview of the code. The code preview works for both multiple line numbers and highlighting [single lines](https://github.com/jupyter-book/mystmd/blob/78d16ee1a/packages/myst-transforms/src/links/plugin.ts#L30), which shows the surrounding ten lines, with the referenced line highlighted. If you reference the [full file](https://github.com/jupyter-book/mystmd/blob/78d16ee1a/packages/myst-transforms/src/links/plugin.ts) then the first ten lines of the file are shown in the preview.
 
 ````{important}
 :class: dropdown

@@ -1,6 +1,6 @@
 import chokidar from 'chokidar';
 import chalk from 'chalk';
-import { join, extname, basename } from 'node:path';
+import { join, extname, basename, resolve } from 'node:path';
 import type { SiteProject } from 'myst-config';
 import type { ISession } from '../../session/types.js';
 import type { ProcessSiteOptions } from '../../process/site.js';
@@ -41,7 +41,7 @@ function triggerProjectReload(
     : selectors.selectCurrentProjectFile(state);
   if (selectors.selectConfigExtensions(state).includes(file)) return true;
   if (file === projectConfigFile || basename(file) === '_toc.yml') return true;
-  // Reload project if file is added or remvoed
+  // Reload project if file is added or removed
   if (['add', 'unlink'].includes(eventType)) return true;
   // Otherwise do not reload project
   return false;
@@ -86,38 +86,46 @@ async function processorFn(
     return;
   }
   const projectPath = siteProject.path;
-  const pageSlug = selectors.selectPageSlug(session.store.getState(), siteProject.path, file);
-  const dependencies = selectors.selectDependentFiles(session.store.getState(), file);
+  const state = session.store.getState();
+  const pageSlug = selectors.selectPageSlug(state, siteProject.path, file);
+  const dependencies = selectors.selectDependentFiles(state, file);
   if (!pageSlug && dependencies.length === 0) {
     session.log.warn(`⚠️ File is not in project: ${file}`);
     return;
   }
-  if (pageSlug) {
-    await fastProcessFile(session, {
-      file,
-      projectPath,
-      projectSlug: siteProject.slug,
-      pageSlug,
-      ...opts,
-    });
-  }
+  await fastProcessFile(session, {
+    file,
+    projectPath,
+    projectSlug: siteProject.slug,
+    pageSlug,
+    ...opts,
+  });
   if (dependencies.length) {
     session.log.info(
       `🔄 Updating dependent pages for ${file} ${chalk.dim(`[${dependencies.join(', ')}]`)}`,
     );
-    await Promise.all([
-      dependencies.map((dep) => {
-        const depSlug = selectors.selectPageSlug(session.store.getState(), projectPath, dep);
-        if (!depSlug) return undefined;
-        return fastProcessFile(session, {
-          file: dep,
-          projectPath,
-          projectSlug: siteProject.slug,
-          pageSlug: depSlug,
-          ...opts,
-        });
-      }),
-    ]);
+    const siteConfig = selectors.selectCurrentSiteFile(state);
+    const projConfig = selectors.selectCurrentProjectFile(state);
+    if (
+      (siteConfig && dependencies.includes(siteConfig)) ||
+      (projConfig && dependencies.includes(projConfig))
+    ) {
+      await processSite(session, { ...opts, reloadProject: true });
+    } else {
+      await Promise.all([
+        dependencies.map(async (dep) => {
+          const depSlug = selectors.selectPageSlug(state, projectPath, dep);
+          if (!depSlug) return undefined;
+          return fastProcessFile(session, {
+            file: dep,
+            projectPath,
+            projectSlug: siteProject.slug,
+            pageSlug: depSlug,
+            ...opts,
+          });
+        }),
+      ]);
+    }
   }
   serverReload();
   // TODO: process full site silently and update if there are any
@@ -126,7 +134,7 @@ async function processorFn(
 
 function watchProcessor(
   session: ISession,
-  siteProject: SiteProject | null,
+  siteProject: { slug: string; path: string } | null,
   serverReload: () => void,
   opts: ProcessSiteOptions,
 ) {
@@ -141,15 +149,20 @@ function watchProcessor(
       return;
     }
     session.store.dispatch(watch.actions.markReloading(true));
+    if (siteProject?.path) file = resolve(siteProject.path, file);
     session.log.debug(`File modified: "${file}" (${eventType})`);
-    await processorFn(session, file, eventType, siteProject, serverReload, opts);
-    while (selectors.selectReloadingState(session.store.getState()).reloadRequested) {
-      // If reload(s) were requested during previous build, just reload everything once.
-      session.store.dispatch(watch.actions.markReloadRequested(false));
-      await processorFn(session, null, eventType, null, serverReload, {
-        ...opts,
-        reloadProject: true,
-      });
+    try {
+      await processorFn(session, file, eventType, siteProject, serverReload, opts);
+      while (selectors.selectReloadingState(session.store.getState()).reloadRequested) {
+        // If reload(s) were requested during previous build, just reload everything once.
+        session.store.dispatch(watch.actions.markReloadRequested(false));
+        await processorFn(session, null, eventType, null, serverReload, {
+          ...opts,
+          reloadProject: true,
+        });
+      }
+    } catch (err: any) {
+      session.log.error(`Error during reload${err.message ? `:\n${err.message}` : ''}`);
     }
     session.store.dispatch(watch.actions.markReloading(false));
   };
@@ -185,6 +198,7 @@ export function watchContent(
         ignoreInitial: true,
         ignored: ['public', '**/_build/**', '**/node_modules/**', '**/.*/**', ...ignored],
         awaitWriteFinish: { stabilityThreshold: 100, pollInterval: 50 },
+        cwd: proj.path,
       })
       .on('all', watchProcessor(session, proj, serverReload, opts));
   });

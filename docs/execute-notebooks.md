@@ -1,14 +1,15 @@
 ---
-title: Execute Notebooks During Your Build
-description: MyST can execute notebooks using Jupyter Server, making it possible to build rich websites and documents from text-based notebooks.
-short_title: Execute Notebooks During Your Build
+title: Execute Notebooks at Build Time
+subtitle: Generate figures and other rich content using Jupyter kernels
+short_title: Execute During Build
+description: MyST can execute Markdown files and Jupyter Notebooks, making it possible to build rich websites from computational documents.
 thumbnail: thumbnails/execute-notebooks.png
 ---
 
-:::{warning} MyST Execution is in Beta
-By default, execution is disabled and code outputs are only inserted if the notebook has already been executed (for text-based notebooks, there are no outputs).
+:::{warning} MyST execution features are in Beta
+By default, execution is disabled and computational outputs are only inserted if the notebook has already been executed (for text-based notebooks, there are no outputs!).
 We are adding support for executing markdown notebooks and ipynb files, including inline execution.
-As we are adding this functionality we appreciate any feedback from the community on how it is working in your environments. Please add [issues](https://github.com/executablebooks/mystmd/issues/new) or join [Discord](https://discord.mystmd.org/) to give feedback.
+As we are adding this functionality we appreciate any feedback from the community on how it is working in your environments. Please add [issues](https://github.com/jupyter-book/mystmd/issues/new) or join [Discord](https://discord.mystmd.org/) to give feedback.
 :::
 
 The MyST CLI can execute your notebooks and markdown files by passing the `--execute` flag to the `start` and `build` commands, i.e.:
@@ -27,6 +28,39 @@ The following computational content will be executed:
 :::{note} Jupyter is required for execution
 In order to execute your MyST content, you must install a Jupyter Server and the kernel needed to execute your code (e.g., the [IPython kernel](https://ipython.readthedocs.io/en/stable/), the [Xeus Python kernel](https://github.com/jupyter-xeus/xeus-python), or the [IRKernel](https://irkernel.github.io/).)
 :::
+
+## Expect a code-cell to fail
+
+By default, MyST will stop executing a notebook if a cell raises an error.
+If instead you'd like MyST to continue executing subsequent cells (e.g., in order to demonstrate an expected error message), add the `raises-exception` tag to the cell.
+If a cell with this tag raises an error, then the error is provided with the cell output, and MyST will continue executing the rest of the cells in a notebook.
+
+The easiest way to add cell tags is via [the JupyterLab interface](https://jupyterlab.readthedocs.io).
+Additionally, you can specify tags (and other cell metadata) with markdown using the {myst:directive}`code-cell` directive.
+
+Here's an example of adding this tag with a {myst:directive}`code-cell` directive:
+
+````markdown
+```{code-cell}
+:tags: raises-exception
+
+print("Hello" + 10001)
+```
+````
+
+## Skip particular code-cells
+
+Sometimes, you might have a notebook containing code that you _don't_ want to execute. For example, you might have code-cells that prompt the user for input, which should be skipped during a website build. MyST understands the same `skip-execution` cell-tag that other Jupyter Notebook tools (such as Jupyter Book) use to prevent a cell from being executed.
+
+For [Markdown notebooks using the {myst:directive}`code-cell` directive](notebooks-with-markdown.md#code-cell), the `skip-execution` tag can be added as follows:
+
+````markdown
+```{code-cell}
+:tags: skip-execution
+
+name = input("What is your name?")
+```
+````
 
 ## Cache execution outputs
 
@@ -65,7 +99,6 @@ pip install ipykernel
 ```
 
 If Jupyter Server is installed and the `--execute` flag is passed to `myst start` or `myst build`, then MyST will attempt to find a healthy existing Jupyter Server. Internally, this is performed using `python -m jupyter_server list`. If no existing servers are found, then MyST will attempt to launch one using `python -m jupyter_server`.
-
 
 ## Manually launch a Jupyter server
 

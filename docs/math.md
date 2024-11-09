@@ -182,22 +182,24 @@ w_{t+1} = (1 + r_{t+1}) s(w_t) + y_{t+1}
 ````
 
 ```{warning}
-If you are using JupyterBook or Sphinx, there are the following limitations:
+If you are using Jupyter Book or Sphinx, there are the following limitations:
 (1) the `label` analysis of the source is not yet implemented;
 (2) you can not reference equations using the {myst:role}`numref` role; and
 (3) labels must not have spaces or start with a number (this is good practice anyways!).
 ```
 `````
 
-### Disabling Numbering
+## Customizing Numbering
 
-TODO!
+To change the reference format for math, you can use the frontmatter under the `numbering` field [see numbering](#numbering).
+To override numbering for a specific equation you can use the {myst:directive}`math.enumerated` option on the math directive.
 
-### Customizing Numbering
-
-To change the reference format, you can use the frontmatter under the `xxx` field.
-
-TODO!
+```markdown
+:::{math}
+:enumerated: false
+Ax = b
+:::
+```
 
 (math-macros)=
 
@@ -228,7 +230,7 @@ The `math` macros are parsed as `yaml` in the frontmatter and can easily be shar
 When using the YAML syntax for the `math` macros, use **single quotes** around the strings. The single quote yaml syntax means you do not have to text-escape the strings, otherwise backslashes `\f`, `\n`, `\b`, `\r`, `\t` and other symbols have to be escaped which is difficult to remember and leads to all sorts of strange errors.
 ```
 
-The `key` is the command that you are defining, in the demo above `\dobs` or `\dpred`, the command should include the `\`. The value of the entry should be the macro definition, if the definition contains `#1` then there will be one required argument for the macro that should be supplied in braces when you use it (e.g. `\dpred{m}`). The macros can be nested as in the example where `\dobs{\mref}` uses two macros.
+The `key` is the command that you are defining, in the demo above `\dobs`, `\dpred`, and `\mref`; the command should include the leading `\`. The value of the entry should be the macro definition. If the definition contains `#1` then there will be one required argument for the macro that should be supplied in braces when you use it (e.g. `\dpred{m}`). The macros can be nested as in the example where `\dpred{\mref}` uses two macros.
 
 In the macro in the example above, `\mathbf{d}_\text{pred}\left( #1 \right)`, the `#1` is the first and only required argument, and is placed in between left and right brackets. The numbering for arguments starts at one, and other arguments can be added with `#2`, `#3`, etc. and then input in a command using `\command{arg1}{arg2}`.
 

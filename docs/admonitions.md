@@ -134,7 +134,7 @@ GitHub markdown transforms blockquotes that start with a bold `Note` or text wit
 ::::{tip} Compatibility with Pandoc & Quarto
 :class: dropdown
 In Quarto/Pandoc markdown admonitions are styled with special classes like `{.callout-note}` or `{.callout-tip}`).
-If you are using JupyterBook or Sphinx documentation, use an {myst:directive}`admonition` directive with the specific class, for example:
+If you are using Jupyter Book or Sphinx documentation, use an {myst:directive}`admonition` directive with the specific class, for example:
 
 ```{myst}
 ::: {.callout-tip}
@@ -149,7 +149,7 @@ This is an example of a callout with a caption.
 :class: dropdown
 In Sphinx, all named admonitions (e.g. `{note}` or `{tip}`), have **no arguments**.
 If you place content on the first line it will instead be prepended to the admonition body.
-If you are using JupyterBook or Sphinx documentation, use an {myst:directive}`admonition` directive with the specific class, for example:
+If you are using Jupyter Book or Sphinx documentation, use an {myst:directive}`admonition` directive with the specific class, for example:
 
 ```{myst}
 :::{admonition} The Title
@@ -167,6 +167,7 @@ This is the body.
 To turn an admonition into a dropdown, add the `dropdown` {myst:directive}`admonition.class` to them.
 Dropdown admonitions use the `<details>` HTML element (meaning they also will work without Javascript!),
 and they can be helpful when including text that shouldn't immediately visible to your readers.
+To have a dropdown-style admonition start open, add the {myst:directive}`admonition.open` option.
 
 ```{myst}
 :::{note} Click Me! 👈

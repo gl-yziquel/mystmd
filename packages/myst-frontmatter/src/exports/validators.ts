@@ -3,6 +3,7 @@ import {
   defined,
   incrementOptions,
   validateBoolean,
+  validateChoice,
   validateEnum,
   validateList,
   validateNumber,
@@ -15,6 +16,7 @@ import { PROJECT_FRONTMATTER_KEYS } from '../project/types.js';
 import { FRONTMATTER_ALIASES } from '../site/types.js';
 import type { Export, ExportArticle } from './types.js';
 import { ExportFormats } from './types.js';
+import { validateTOC } from 'myst-toc';
 
 const EXPORT_KEY_OBJECT = {
   required: [],
@@ -27,6 +29,7 @@ const EXPORT_KEY_OBJECT = {
     'name',
     'renderer',
     'articles',
+    'top_level',
     'sub_articles',
   ],
   alias: {
@@ -57,6 +60,7 @@ export const EXT_TO_FORMAT: Record<string, ExportFormats> = {
   '.jats': ExportFormats.xml,
   '.typ': ExportFormats.typst,
   '.typst': ExportFormats.typst,
+  '.cff': ExportFormats.cff,
 };
 
 export const RESERVED_EXPORT_KEYS = [
@@ -76,14 +80,26 @@ export const MULTI_ARTICLE_EXPORT_FORMATS = [
 
 export function validateExportsList(input: any, opts: ValidationOptions): Export[] | undefined {
   if (input === undefined) return undefined;
-  const output = validateList(
-    input,
-    { coerce: true, ...incrementOptions('exports', opts) },
-    (exp, ind) => {
-      return validateExport(exp, incrementOptions(`exports.${ind}`, opts));
-    },
-  );
+  const exportsOptions = { coerce: true, ...incrementOptions('exports', opts) };
+  const output = validateList(input, exportsOptions, (exp, ind) => {
+    return validateExport(exp, incrementOptions(`exports.${ind}`, opts));
+  });
   if (!output || output.length === 0) return undefined;
+  const duplicates = new Set<string>();
+  output.forEach((exp, ind) => {
+    if (
+      exp.id &&
+      output
+        .slice(ind + 1)
+        .map(({ id }) => id)
+        .includes(exp.id)
+    ) {
+      duplicates.add(exp.id);
+    }
+  });
+  if (duplicates.size) {
+    validationError(`duplicate export ids: ${[...duplicates].join(', ')}`, exportsOptions);
+  }
   return output;
 }
 
@@ -237,6 +253,12 @@ export function validateExport(input: any, opts: ValidationOptions): Export | un
       validExport.articles = undefined;
     }
   }
+  if (defined(value.top_level)) {
+    validExport.top_level = validateChoice(value.top_level || 'sections', {
+      ...incrementOptions('top_level', opts),
+      choices: ['parts', 'chapters', 'sections'],
+    }) as Export['top_level'];
+  }
   if (defined(value.sub_articles)) {
     if (validExport.format !== ExportFormats.xml) {
       validationError("sub_articles are only supported for 'jats' export", opts);
@@ -255,12 +277,16 @@ export function validateExport(input: any, opts: ValidationOptions): Export | un
     const tocOpts = incrementOptions('toc', opts);
     if (validExport.articles || validExport.sub_articles) {
       validationError(
-        'export cannot define both toc file and articles/sub_articles; ignoring toc',
+        'export cannot define both toc and articles/sub_articles; ignoring toc',
         tocOpts,
       );
       validExport.toc = undefined;
+    } else if (typeof value.toc === 'string') {
+      // Support legacy behavior of providing a jupyterbook toc file as export.toc
+      validExport.tocFile = value.toc;
+      validExport.toc = undefined;
     } else {
-      validExport.toc = validateString(value.toc, tocOpts);
+      validExport.toc = validateTOC(value.toc, tocOpts);
     }
   }
   return validExport;

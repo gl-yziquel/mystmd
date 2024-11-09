@@ -58,6 +58,7 @@ const macros: Record<string, number> = {
   Citet: 1,
   Citep: 1,
   Citeauthor: 1,
+  citealp: 1,
   citeyear: 1,
   citeyearpar: 1,
   primarypubs: 2,
@@ -79,6 +80,7 @@ const macros: Record<string, number> = {
   multirow: 5,
   multicolumn: 3,
   subfigure: 2,
+  wrapfigure: 3,
   tabularx: 2,
   longtable: 2,
   ['longtable*']: 2,
@@ -131,6 +133,10 @@ const macros: Record<string, number> = {
   t: 1,
   u: 1,
   v: 1,
+  // Cancel
+  cancel: 1,
+  bcancel: 1,
+  xcancel: 1,
 };
 
 // These macros allow a mix of {} and [] arguments, rather than only allowing

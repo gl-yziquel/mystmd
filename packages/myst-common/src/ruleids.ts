@@ -38,6 +38,7 @@ export enum RuleId {
   roleBodyCorrect = 'role-body-correct',
   // Project structure rules
   tocContentsExist = 'toc-contents-exist',
+  encounteredLegacyTOC = 'encountered-legacy-toc',
   validTOCStructure = 'valid-toc-structure',
   validTOC = 'valid-toc',
   tocWritten = 'toc-written',
@@ -80,6 +81,7 @@ export enum RuleId {
   gatedNodesJoin = 'gated-nodes-join',
   glossaryUsesDefinitionList = 'glossary-uses-definition-list',
   blockMetadataLoads = 'block-metadata-loads',
+  indexEntriesResolve = 'index-entries-resolve',
   // Citation rules
   citationIsUnique = 'citation-is-unique',
   bibFileExists = 'bib-file-exists',
@@ -99,6 +101,9 @@ export enum RuleId {
   staticActionFileCopied = 'static-action-file-copied',
   // Plugins
   pluginLoads = 'plugin-loads',
+  pluginExecutionFailed = 'plugin-execution-failed',
   // Container rules
-  containerChildrenValid = 'contianer-children-valid',
+  containerChildrenValid = 'container-children-valid',
+  // File rules
+  mystJsonValid = 'myst-json-valid',
 }

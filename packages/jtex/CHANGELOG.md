@@ -1,5 +1,34 @@
 # jtex
 
+## 1.0.20
+
+### Patch Changes
+
+- b9de3469: Change typst exports to be less- conflict prone.
+- Updated dependencies [2bce565]
+  - myst-common@1.7.3
+  - myst-frontmatter@1.7.3
+
+## 1.0.19
+
+### Patch Changes
+
+- ce3c11c: Update inter-version deps
+- Updated dependencies [ce3c11c]
+  - myst-templates@1.0.23
+
+## 1.0.18
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - simple-validators@1.0.6
+  - myst-frontmatter@1.5.1
+  - myst-cli-utils@2.0.10
+  - myst-templates@1.0.20
+  - myst-common@1.5.1
+
 ## 1.0.17
 
 ### Patch Changes
@@ -393,7 +422,7 @@
 
 ### Patch Changes
 
-- 184ad9f9: Move to https://github.com/executablebooks/mystmd
+- 184ad9f9: Move to https://github.com/jupyter-book/mystmd
 - 615c1441: Jtex can now be used to pre-render word templates
 - 615c1441: Sessions are now aware of their build path (making things more consistent)
   For example, change the template location to the site working directory.

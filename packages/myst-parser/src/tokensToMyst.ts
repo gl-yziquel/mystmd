@@ -91,6 +91,7 @@ const defaultMdast: Record<string, TokenHandlerSpec> = {
       };
     },
   },
+  s: { type: 'delete' },
   hr: {
     type: 'thematicBreak',
     noCloseToken: true,
@@ -397,7 +398,7 @@ const defaultMdast: Record<string, TokenHandlerSpec> = {
     getAttrs(t) {
       return {
         name: t.info,
-        value: t.content,
+        value: t.meta.value,
       };
     },
   },

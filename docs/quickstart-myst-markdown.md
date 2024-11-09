@@ -50,8 +50,9 @@ For example, try editing the following {myst:directive}`figure` directive, you c
 
 ```{myst}
 
-:::{figure} https://source.unsplash.com/random/400x200?meditation
+:::{figure} https://github.com/rowanc1/pics/blob/main/banff-tall.png?raw=true
 :align: right
+:width: 40%
 
 The picture would look better if it is `:align: center`-ed!
 :::
@@ -121,12 +122,12 @@ As you have seen in the links in MyST (e.g. [](./frontmatter.md)), there is info
 Try clicking the footnote above, you can nest information and interactive figures for the interested reader! You can help with reading comprehension by around 26% by providing information when the reader needs it!!
 :::
 
-To link to a document, for example [](./frontmatter.md), is done through a simple Markdown link `[](./frontmatter.md)`, you can put your own content in between the square brackets, but if you leave it out the link contents will be filled in with the title of the page. If you define the frontmatter on that page (i.e. the description and tooltip), you will also see that information when you hover over the link. This also works for links to Wikipedia (e.g. [Ponyies 🐴](https://en.wikipedia.org/wiki/New_Forest_pony)) as well as Github code (e.g. [](https://github.com/executablebooks/mystmd/blob/main/README.md)).
+To link to a document, for example [](./frontmatter.md), is done through a simple Markdown link `[](./frontmatter.md)`, you can put your own content in between the square brackets, but if you leave it out the link contents will be filled in with the title of the page. If you define the frontmatter on that page (i.e. the description and tooltip), you will also see that information when you hover over the link. This also works for links to Wikipedia (e.g. [Ponies 🐴](https://en.wikipedia.org/wiki/New_Forest_pony)) as well as Github code (e.g. [](https://github.com/jupyter-book/mystmd/blob/main/README.md)).
 
 To create a cross-reference, you need to label a "target", like a figure, section, equation or table (or anything!!). To be referenceable, these elements can add the `label` option in many directives. To then reference the figure, use the link syntax again pointing to the label as the target `[](#my-fig)`. If you leave the title blank the default will fill in with an enumerated "Figure 1".
 
 ````{myst}
-```{figure} https://source.unsplash.com/random/500x200/?mountain
+```{figure} https://github.com/rowanc1/pics/blob/main/mountains.png?raw=true
 :label: my-fig
 :align: center
 
@@ -160,7 +161,7 @@ See [](./citations.md) for more information about using citations and references
 
 ## What's Next?
 
-We hope the above sections in this overview should have given you a sense of the types of things that MyST can do! Once you write a document in MyST, you can use the command line tools to translate that into a [scientific PDF article](./creating-pdf-documents.md), or a [Word Document](./creating-word-documents.md) or a [website](./quickstart-myst-websites.md) like this site!
+We hope the above sections in this overview should have given you a sense of the types of things that MyST can do! Once you write a document in MyST, you can use the command line tools to translate that into a [scientific PDF article](./creating-pdf-documents.md), or a [Word Document](./creating-word-documents.md) or a [website](./quickstart-myst-documents.md) like this site!
 
 ```{mermaid}
 flowchart LR
@@ -176,5 +177,7 @@ flowchart LR
 ```
 
 :::{seealso}
-You might also want to explore tools and extensions, like the [JupyterLab MyST extension](https://github.com/executablebooks/jupyterlab-myst), [VSCode extension](https://marketplace.visualstudio.com/items?itemName=ExecutableBookProject.myst-highlight) or [Curvenote](https://curvenote.com/for/writing) to make your rendering and writing of MyST easier.
+You might also want to explore tools and extensions, like the [JupyterLab MyST extension](https://github.com/jupyter-book/jupyterlab-myst), [VSCode extension](https://marketplace.visualstudio.com/items?itemName=ExecutableBookProject.myst-highlight) or [Curvenote](https://curvenote.com/for/writing) to make your rendering and writing of MyST easier.
 :::
+
+![](#quickstart-cards)

@@ -6,6 +6,7 @@ import { mathRole } from './math.js';
 import { refRole } from './reference.js';
 import { docRole } from './doc.js';
 import { downloadRole } from './download.js';
+import { indexRole } from './indices.js';
 import { termRole } from './term.js';
 import { siRole } from './si.js';
 import { evalRole } from './inlineExpression.js';
@@ -14,6 +15,7 @@ import { subscriptRole } from './subscript.js';
 import { superscriptRole } from './superscript.js';
 import { underlineRole } from './underline.js';
 import { keyboardRole } from './keyboard.js';
+import { rawLatexRole, rawTypstRole } from './raw.js';
 
 export const defaultRoles = [
   abbreviationRole,
@@ -24,6 +26,7 @@ export const defaultRoles = [
   refRole,
   docRole,
   downloadRole,
+  indexRole,
   termRole,
   siRole,
   evalRole,
@@ -32,6 +35,8 @@ export const defaultRoles = [
   superscriptRole,
   underlineRole,
   keyboardRole,
+  rawLatexRole,
+  rawTypstRole,
 ];
 export { abbreviationRole } from './abbreviation.js';
 export { chemRole } from './chem.js';
@@ -41,6 +46,7 @@ export { mathRole } from './math.js';
 export { refRole } from './reference.js';
 export { docRole } from './doc.js';
 export { downloadRole } from './download.js';
+export { indexRole } from './indices.js';
 export { termRole } from './term.js';
 export { siRole } from './si.js';
 export { smallcapsRole } from './smallcaps.js';
@@ -48,3 +54,4 @@ export { subscriptRole } from './subscript.js';
 export { superscriptRole } from './superscript.js';
 export { underlineRole } from './underline.js';
 export { keyboardRole } from './keyboard.js';
+export { rawLatexRole, rawTypstRole } from './raw.js';

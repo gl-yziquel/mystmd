@@ -85,7 +85,7 @@ export async function runWordExport(
   opts?: ExportFnOptions,
 ): Promise<ExportResults> {
   const { output, articles } = exportOptions;
-  const { clean, projectPath, extraLinkTransformers } = opts ?? {};
+  const { clean, projectPath, extraLinkTransformers, execute } = opts ?? {};
   // At this point, export options are resolved to contain one-and-only-one article
   const article = articles[0];
   if (!article?.file) return { tempFolders: [] };
@@ -100,6 +100,7 @@ export async function runWordExport(
     preFrontmatters: [
       filterKeys(article, [...PAGE_FRONTMATTER_KEYS, ...Object.keys(FRONTMATTER_ALIASES)]),
     ],
+    execute,
   });
   const mystTemplate = new MystTemplate(session, {
     kind: TemplateKind.docx,
@@ -123,7 +124,7 @@ export async function runWordExport(
   data.frontmatter = { ...data.frontmatter, ...exportFrontmatter };
   const { options, doc } = mystTemplate.prepare({
     frontmatter: data.frontmatter,
-    parts: [],
+    parts: {},
     options: { ...data.frontmatter.options, ...exportOptions },
     sourceFile: file,
   });

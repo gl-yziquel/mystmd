@@ -1,5 +1,108 @@
 # mystmd
 
+## 1.3.17
+
+## 1.3.16
+
+## 1.3.15
+
+### Patch Changes
+
+- 2bce565: Add site option to include folder structure in url paths
+
+## 1.3.14
+
+## 1.3.13
+
+### Patch Changes
+
+- b14e0fb3: Force exit when the task is complete.
+
+## 1.3.12
+
+## 1.3.11
+
+## 1.3.10
+
+## 1.3.9
+
+### Patch Changes
+
+- 594a0f87: Top level AMS environments are not wrapped
+- e3c3efa7: Add latex support for hyperlink and hypertarget
+
+## 1.3.8
+
+### Patch Changes
+
+- 822fd2d5: Ensure that AMS Math environments are only used if there is a single environment that encloses the entire math environment.
+- c758f1b5: Directive option flag is always a boolean
+
+## 1.3.7
+
+### Patch Changes
+
+- d642197: Update the python build packaging
+
+## 1.3.6
+
+## 1.3.5
+
+### Patch Changes
+
+- 64e11918: Suppress punycode deprecation warning
+- 85520edd: Allow for explicit ignoring of longer abbreviations
+- da224b78: Reduce scope of date parsing, and validate to ISO8601
+- 88396dd: Add enumerator and enumerated to directives
+- 0625105e: Citation improvements for latex (citealp)
+
+## 1.3.4
+
+## 1.3.3
+
+### Patch Changes
+
+- 706d01e8: Updates for typst math subscripts
+- 05b5e40e: 🐛 Citations broken with trim when a list
+
+## 1.3.2
+
+## 1.3.1
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+
+## 1.3.0
+
+### Patch Changes
+
+- 0576d5ad: Add support for whitelabelling
+
+## 1.2.9
+
+### Patch Changes
+
+- fc79fb1e: Prevent generation of random temp*id*\* citation labels
+
+## 1.2.8
+
+## 1.2.7
+
+## 1.2.6
+
+### Patch Changes
+
+- 2c3290be: Add build command to write remote doi citations to bibtex
+- 286ceaaf: Fetch config files from url
+- 3d93fdb9: Footnotes that are reused should have the same number
+
+## 1.2.5
+
+### Patch Changes
+
+- 65ade89: Consume new math structure
+
 ## 1.2.4
 
 ### Patch Changes

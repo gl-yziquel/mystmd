@@ -41,6 +41,7 @@ export const defaultOptions: Omit<AllOptions, 'vfile'> = {
     tasklist: true,
     tables: true,
     blocks: true,
+    strikethrough: false,
   },
   mdast: {},
   directives: defaultDirectives,
@@ -75,6 +76,7 @@ export function createTokenizer(opts?: Options) {
   if (markdownit.linkify) {
     tokenizer.linkify.tlds(tlds.filter((tld) => !EXCLUDE_TLDS.includes(tld)));
   }
+  if (extensions.strikethrough) tokenizer.enable('strikethrough');
   if (extensions.smartquotes) tokenizer.enable('smartquotes');
   if (extensions.tables) tokenizer.enable('table');
   if (extensions.colonFences) tokenizer.use(colonFencePlugin);
@@ -114,8 +116,10 @@ export function mystParse(content: string, opts?: Options) {
 /**
  * MyST Parser as a Unified Plugin
  */
-export const mystParser: Plugin<[Options?], string, GenericParent> = function mystParser() {
-  this.Parser = (content: string, opts?: Options) => {
+export const mystParser: Plugin<[Options?], string, GenericParent> = function mystParser(
+  opts?: Options,
+) {
+  this.Parser = (content: string) => {
     return mystParse(content, opts);
   };
 };

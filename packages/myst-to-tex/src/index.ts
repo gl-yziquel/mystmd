@@ -1,12 +1,13 @@
-import type { Root, Parent, Code, Abbreviation } from 'myst-spec';
+import type { Root, Parent, Abbreviation } from 'myst-spec';
 import type { Plugin } from 'unified';
 import type { VFile } from 'vfile';
 import type { GenericNode, References } from 'myst-common';
-import { RuleId, fileError, toText, getMetadataTags } from 'myst-common';
+import { RuleId, fileError, toText, getMetadataTags, fileWarn } from 'myst-common';
 import { captionHandler, containerHandler } from './container.js';
 import { renderNodeToLatex } from './tables.js';
 import type { Handler, ITexSerializer, LatexResult, Options, StateData } from './types.js';
 import {
+  addIndexEntries,
   getClasses,
   getLatexImageWidth,
   hrefToLatexText,
@@ -15,7 +16,7 @@ import {
 } from './utils.js';
 import MATH_HANDLERS, { withRecursiveCommands } from './math.js';
 import { selectAll } from 'unist-util-select';
-import type { FootnoteDefinition, Heading } from 'myst-spec-ext';
+import type { FootnoteDefinition, Code, Heading } from 'myst-spec-ext';
 import { transformLegends } from './legends.js';
 import { proofHandler } from './proof.js';
 
@@ -35,11 +36,23 @@ const glossaryReferenceHandler: Handler = (node, state) => {
 
   const entry = state.glossary[node.identifier];
   if (!entry) {
-    fileError(state.file, `Unknown glossary entry identifier "${node.identifier}"`, {
-      node,
-      source: 'myst-to-tex',
-      ruleId: RuleId.texRenders,
-    });
+    if (node.identifier.startsWith('index-heading-')) {
+      fileWarn(
+        state.file,
+        `Cannot cross-reference index headings in tex export "${node.identifier}"`,
+        {
+          node,
+          source: 'myst-to-tex',
+          ruleId: RuleId.texRenders,
+        },
+      );
+    } else {
+      fileError(state.file, `Unknown glossary entry identifier "${node.identifier}"`, {
+        node,
+        source: 'myst-to-tex',
+        ruleId: RuleId.texRenders,
+      });
+    }
     const gn = node as GenericNode;
     state.write(toText(node).trim() || gn.label || '');
     return;
@@ -105,6 +118,7 @@ const handlers: Record<string, Handler> = {
     state.text(node.value);
   },
   paragraph(node, state) {
+    addIndexEntries(node, state);
     state.renderChildren(node);
   },
   heading(node: Heading, state) {
@@ -128,6 +142,7 @@ const handlers: Record<string, Handler> = {
     if (enumerated !== false && label && !node.implicit) {
       state.write(`\\label{${label}}`);
     }
+    addIndexEntries(node, state);
     state.closeBlock(node);
   },
   block(node, state) {
@@ -157,9 +172,17 @@ const handlers: Record<string, Handler> = {
     } else if (metadataTags.includes('page-break')) {
       state.write('\\pagebreak\n');
     }
+    if (node.data?.part === 'index') {
+      state.data.hasIndex = true;
+      state.usePackages('imakeidx');
+      state.write('\\printindex\n');
+      return;
+    }
+    addIndexEntries(node, state);
     state.renderChildren(node, false);
   },
   blockquote(node, state) {
+    addIndexEntries(node, state);
     state.renderEnvironment(node, 'quote');
   },
   definitionList(node, state) {
@@ -179,6 +202,10 @@ const handlers: Record<string, Handler> = {
     state.renderChildren(node, true);
   },
   code(node: Code, state) {
+    if (node.visibility === 'remove') {
+      return;
+    }
+    addIndexEntries(node, state);
     let start = '\\begin{verbatim}\n';
     let end = '\n\\end{verbatim}';
 
@@ -200,6 +227,7 @@ const handlers: Record<string, Handler> = {
     state.closeBlock(node);
   },
   list(node, state) {
+    addIndexEntries(node, state);
     if (state.data.isInTable) {
       node.children.forEach((child: any, i: number) => {
         state.write(node.ordered ? `${i}.~~` : '\\textbullet~~');
@@ -230,10 +258,12 @@ const handlers: Record<string, Handler> = {
     state.renderChildren(node, false);
   },
   div(node, state) {
+    addIndexEntries(node, state);
     state.renderChildren(node, false);
   },
   span(node, state) {
     state.renderChildren(node, true);
+    addIndexEntries(node, state);
   },
   comment(node, state) {
     state.ensureNewLine();
@@ -317,6 +347,7 @@ const handlers: Record<string, Handler> = {
     state.write('}');
   },
   admonition(node, state) {
+    addIndexEntries(node, state);
     state.usePackages('framed');
     state.renderEnvironment(node, 'framed');
   },
@@ -326,6 +357,7 @@ const handlers: Record<string, Handler> = {
   },
   table: renderNodeToLatex,
   image(node, state) {
+    addIndexEntries(node, state);
     state.usePackages('graphicx');
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { width: nodeWidth, url: nodeSrc, align: nodeAlign } = node;
@@ -429,6 +461,13 @@ const handlers: Record<string, Handler> = {
       state.write('\\texttt{');
       state.text(node.value, false);
       state.write('}');
+    }
+  },
+  raw(node, state) {
+    if (node.tex) {
+      state.write(node.tex);
+    } else if (node.children?.length) {
+      state.renderChildren(node);
     }
   },
 };
@@ -548,6 +587,7 @@ const plugin: Plugin<[Options?], Root, VFile> = function (opts) {
       imports: [...state.data.imports],
       preamble: {
         hasProofs: state.data.hasProofs,
+        hasIndex: state.data.hasIndex,
         printGlossaries: opts?.printGlossaries,
         glossary: state.glossary,
         abbreviations: state.abbreviations,

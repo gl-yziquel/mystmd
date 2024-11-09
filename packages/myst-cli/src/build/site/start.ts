@@ -13,7 +13,7 @@ import type { ISession } from '../../session/types.js';
 import version from '../../version.js';
 import { createServerLogger } from './logger.js';
 import { buildSite } from './prepare.js';
-import { installSiteTemplate, getMystTemplate } from './template.js';
+import { installSiteTemplate, getSiteTemplate } from './template.js';
 import { watchContent } from './watch.js';
 
 const DEFAULT_START_COMMAND = 'npm run start';
@@ -51,6 +51,7 @@ export async function startContentServer(session: ISession, opts?: ServerOptions
   app.use('/config.json', express.static(join(session.sitePath(), 'config.json')));
   app.use('/objects.inv', express.static(join(session.sitePath(), 'objects.inv')));
   app.use('/myst.xref.json', express.static(join(session.sitePath(), 'myst.xref.json')));
+  app.use('/myst.search.json', express.static(join(session.sitePath(), 'myst.search.json')));
   const server = app.listen(port, () => {
     session.log.debug(`Content server listening on port ${port}`);
   });
@@ -120,9 +121,9 @@ export async function startServer(
   opts: StartOptions,
 ): Promise<AppServer | undefined> {
   // Ensure we are on the latest version of the configs
-  session.reload();
+  await session.reload();
   warnOnHostEnvironmentVariable(session, opts);
-  const mystTemplate = await getMystTemplate(session, opts);
+  const mystTemplate = await getSiteTemplate(session, opts);
   if (!opts.headless) await installSiteTemplate(session, mystTemplate);
   await buildSite(session, opts);
   const server = await startContentServer(session, opts);

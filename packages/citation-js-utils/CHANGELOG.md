@@ -1,5 +1,36 @@
 # citation-js-utils
 
+## 1.2.6
+
+### Patch Changes
+
+- d0532699: Replace n.d. with access date for urls in citations
+
+## 1.2.5
+
+### Patch Changes
+
+- 05b5e40e: Fix citations
+
+## 1.2.4
+
+### Patch Changes
+
+- 1ac4d7a6: Trim spaces on DOIs and URLs in bibtex
+
+## 1.2.3
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+
+## 1.2.2
+
+### Patch Changes
+
+- fc79fb1e: Configure citation-js to keep original citation labels
+- fc79fb1e: Prevent generation of random temp*id*\* citation labels
+
 ## 1.2.1
 
 ### Patch Changes
@@ -83,7 +114,7 @@
 
 ### Patch Changes
 
-- 184ad9f9: Move to https://github.com/executablebooks/mystmd
+- 184ad9f9: Move to https://github.com/jupyter-book/mystmd
 
 ## 0.0.10
 

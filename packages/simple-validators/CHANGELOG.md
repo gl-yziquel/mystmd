@@ -1,5 +1,27 @@
 # simple-validators
 
+## 1.1.0
+
+### Minor Changes
+
+- da224b78: Reduce scope of date parsing, and validate to ISO8601
+
+### Patch Changes
+
+- 85520edd: Add minLength to string validation
+
+## 1.0.6
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+
+## 1.0.5
+
+### Patch Changes
+
+- 65ade89: Validate object no longer allows arrays
+
 ## 1.0.4
 
 ### Patch Changes
@@ -35,4 +57,4 @@
 
 ### Patch Changes
 
-- 184ad9f9: Move to https://github.com/executablebooks/mystmd
+- 184ad9f9: Move to https://github.com/jupyter-book/mystmd

@@ -1,5 +1,65 @@
 # myst-spec-ext
 
+## 1.7.4
+
+### Patch Changes
+
+- eb411d0b: Allow for iframe to have a placeholder
+
+## 1.7.3
+
+## 1.7.2
+
+### Patch Changes
+
+- 4a3ee6db: Keep track of implicit vs. explicit pages in project TOC
+
+## 1.7.1
+
+## 1.7.0
+
+### Minor Changes
+
+- 5f8f0b0d: Add support for seach index generation
+
+## 1.6.1
+
+## 1.6.0
+
+### Patch Changes
+
+- 85db77c7: Add urlOptimized to image type
+
+## 1.5.4
+
+### Patch Changes
+
+- 4e880f3e: Add open to the admonition
+
+## 1.5.3
+
+### Patch Changes
+
+- 857c5acf: Add raw directives/roles for inserting tex/typst-specific content
+
+## 1.5.2
+
+## 1.5.1
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+
+## 1.5.0
+
+## 1.4.7
+
+## 1.4.6
+
+## 1.4.5
+
+## 1.4.4
+
 ## 1.4.3
 
 ## 1.4.2

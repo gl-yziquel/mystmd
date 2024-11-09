@@ -1,5 +1,90 @@
 # myst-directives
 
+## 1.5.8
+
+### Patch Changes
+
+- eb411d0b: Allow for iframe to have a placeholder
+- Updated dependencies [eb411d0b]
+  - myst-spec-ext@1.7.4
+  - myst-common@1.7.4
+
+## 1.5.7
+
+### Patch Changes
+
+- ce3c11c: Update inter-version deps
+
+## 1.5.6
+
+## 1.5.5
+
+### Patch Changes
+
+- Updated dependencies [85db77c7]
+- Updated dependencies [8ba7b73a]
+  - myst-spec-ext@1.6.0
+  - myst-common@1.6.0
+
+## 1.5.4
+
+### Patch Changes
+
+- 60fc2574: Ensure é ends up in the E index.
+- 88396dd: Add enumerator and enumerated to directives
+- 4e880f3e: Add open to the admonition
+- Updated dependencies [4e880f3e]
+  - myst-spec-ext@1.5.4
+  - myst-common@1.5.4
+
+## 1.5.3
+
+### Patch Changes
+
+- 857c5acf: Add raw directives/roles for inserting tex/typst-specific content
+- Updated dependencies [857c5acf]
+  - myst-spec-ext@1.5.3
+  - myst-common@1.5.3
+
+## 1.5.2
+
+### Patch Changes
+
+- 134598fd: Add index directives/roles to myst-cli
+- Updated dependencies [134598fd]
+- Updated dependencies [3fd53be8]
+  - myst-common@1.5.2
+  - myst-spec-ext@1.5.2
+
+## 1.5.1
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - myst-spec-ext@1.5.1
+  - myst-common@1.5.1
+
+## 1.5.0
+
+### Minor Changes
+
+- d04ceb6a: Drop `output` directive
+
+### Patch Changes
+
+- Updated dependencies [0576d5ad]
+  - myst-common@1.5.0
+  - myst-spec-ext@1.5.0
+
+## 1.4.4
+
+### Patch Changes
+
+- 933b7b33: Fix caption for CSV table
+  - myst-common@1.4.5
+  - myst-spec-ext@1.4.5
+
 ## 1.4.3
 
 ### Patch Changes
@@ -141,8 +226,8 @@
 
   Addresses:
 
-  - https://github.com/executablebooks/mystmd/pull/748
-  - https://github.com/executablebooks/mystmd/issues/816
+  - https://github.com/jupyter-book/mystmd/pull/748
+  - https://github.com/jupyter-book/mystmd/issues/816
 
 - bfed37b: Make table directive less opinionated
 - 9573382a: Remove `code-cell` language warning in jupytext notebooks

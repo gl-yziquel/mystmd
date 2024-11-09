@@ -55,6 +55,7 @@ project:
 ```
 
 (composing-myst-yml)=
+
 #### Composing multiple `.yml` files
 
 You may separate your frontmatter into multiple, composable files. To reference other files from your main `myst.yml` file, use the `extends` key with relative path(s) to the other configuration files:
@@ -68,9 +69,20 @@ extends:
   - ../funding.yml
 ```
 
-Each of these files listed under `extends` must contain valid `myst.yml` structure with `version: 1` and `site` or `project` keys. They may also have additional files listed under `extends`.
+Each entry listed under `extends` may be a relative path to a file or a URL. URLs must be direct links to files which are downloaded and cached locally. The files must contain valid `myst.yml` structure with `version: 1` and `site` or `project` keys. They may also have additional entries listed under `extends`.
 
 Composing files together this way allows you to have a single source of truth for project frontmatter that may be reused across multiple projects, for example math macros or funding information.
+
+When using `extends` to compose configuration files, list-type fields are combined, rather than replaced. This means, for example, you may define a single export in one file:
+
+```yaml
+version: 1
+project:
+  export:
+    format: meca
+```
+
+Then, any `myst.yml` file that extends this file will have a `meca` export in addition to any other exports it defines. This behavior applies to the list fields: `tags`, `keywords`, `exports`, `downloads`, `funding`, `resources`, `requirements`, `bibliography`, `editors`, and `reviewers`. The fields `exports` and `downloads` are deduplicated by `id`, so if you wish to override a value from an inherited configuration you may assign it the same `id`. Other fields cannot be overridden; instead, shared configurations should be as granular and shareable as possible.
 
 +++
 
@@ -86,6 +98,9 @@ The following table lists the available frontmatter fields, a brief description 
   - description
   - field behavior
 * - `title`
+  - a string (max 500 chars, see [](#titles))
+  - page & project
+* - `subtitle`
   - a string (max 500 chars, see [](#titles))
   - page & project
 * - `short_title`
@@ -104,16 +119,22 @@ The following table lists the available frontmatter fields, a brief description 
   - a string (max 500 chars) to identify the page in cross-references
   - page only
 * - `tags`
-  - a list of strings
-  - page only
+  - a list of strings. Use to categorize posts/articles or the project to make it easier for readers to find related content within your site.
+  - page & project
 * - `thumbnail`
   - a link to a local or remote image
-  - page only
-* - `subtitle`
-  - a string (max 500 chars, see [](#titles))
-  - page only
+  - page & project
+* - `banner`
+  - a link to a local or remote image
+  - page & project
+* - `parts`
+  - a dictionary of arbitrary content parts, not part of the main article, for example `abstract`, `data_availability` see [](./document-parts.md).
+  - page & project
 * - `date`
   - a valid date formatted string
+  - page can override project
+* - `keywords`
+  - a list of strings. Use in articles to highlight key concepts and facilitate indexing in scientific databases.
   - page can override project
 * - `authors`
   - a list of author objects, see [](#frontmatter:authors)
@@ -132,6 +153,12 @@ The following table lists the available frontmatter fields, a brief description 
   - page can override project
 * - `arxiv`
   - a valid arXiv reference, either URL or id
+  - page can override project
+* - `pmid`
+  - a valid PubMed ID, an integer
+  - page can override project
+* - `pmcid`
+  - a valid PubMed Central ID, a string 'PMC' followed by numeric digits
   - page can override project
 * - `open_access`
   - boolean (true/false)
@@ -155,10 +182,19 @@ The following table lists the available frontmatter fields, a brief description 
   - a string (max 40 chars)
   - page can override project
 * - `venue`
-  - a venue object
+  - a venue object with journal and conference metadata fields
   - page can override project
-* - `biblio`
-  - a biblio object with various fields
+* - `volume`
+  - information about the journal volume, see [](#publication-metadata)
+  - page can override project
+* - `issue`
+  - information about the journal issue, see [](#publication-metadata)
+  - page can override project
+* - `first_page`
+  - first page of the project or article, for published works
+  - page can override project
+* - `last_page`
+  - last page of the project or article, for published works
   - page can override project
 * - `math`
   - a dictionary of math macros (see [](#math-macros))
@@ -169,9 +205,6 @@ The following table lists the available frontmatter fields, a brief description 
 * - `numbering`
   - object for customizing content numbering (see [](#numbering))
   - page can override project
-* - `parts`
-  - a dictionary of arbitrary content parts, not part of the main article, for example `abstract`, `data_availability` see [](./document-parts.md).
-  - page only
 * - `options`
   - a dictionary of arbitrary options validated and consumed by templates, for example, during site or PDF build
   - page can override project
@@ -190,10 +223,14 @@ The following table lists the available frontmatter fields, a brief description 
 * - `jupyter` or `thebe`
   - configuration for Jupyter execution (see [](./integrating-jupyter.md))
   - project only
+* - `kernelspec`
+  - configuration for the kernel (see [](#kernel-specification))
+  - page only
 ```
 
 +++
 
+(field-behavior)=
 ## Field Behavior
 
 Frontmatter can be attached to a “page”, meaning a local `.md` or `.ipynb` or a “project”. However, individual frontmatter fields are not uniformly available at both levels, and behavior of certain fields are different between project and page levels. There are three field behaviors to be aware of:
@@ -342,7 +379,7 @@ The `authors` field is a list of `author` objects. Available fields in the autho
 * - `equal_contributor`
   - a boolean (true/false), indicates that the author is an equal contributor
 * - `deceased`
-  - a boolean (true/false), indicates that the author is an deceased
+  - a boolean (true/false), indicates that the author is deceased
 * - `twitter`
   - a twitter username
 * - `github`
@@ -517,19 +554,16 @@ affiliations:
 
 ## Date
 
-The date field is a string and should conform to a valid Javascript data format. Examples of acceptable date formats are:
+The date field is a string and should conform to a well-defined calendar date. Examples of acceptable date formats are:
 
-- `2021-12-14T10:43:51.777Z` - [an ISO 8601 calendar date extended format](https://262.ecma-international.org/11.0/#sec-date-time-string-format), or
-- `14 Dec 2021`
-- `14 December 2021`
-- `2021, December 14`
-- `2021 December 14`
-- `12/14/2021` - `MM/DD/YYYY`
-- `12-14-2021` - `MM-DD-YYYY`
-- `2022/12/14` - `YYYY/MM/DD`
 - `2022-12-14` - `YYYY-MM-DD`
+- `01 Jan 2000` - `DD? MON YYYY`
+- `Sat, 1 Jan 2000` - `DAY, DD? MON YYYY`
 
-Where the latter example in that list are valid [IETF timestamps](https://datatracker.ietf.org/doc/html/rfc2822#page-14)
+These dates correspond to two main formats:
+
+- A strict (full, extended) calendar date defined by [ISO 8601](https://en.wikipedia.org/wiki/ISO_8601) (see also [RFC 3339](https://datatracker.ietf.org/doc/html/rfc3339))
+- A date-only variant of [RFC 2822](https://datatracker.ietf.org/doc/html/rfc2822), built using the RFC gammar rules.
 
 (frontmatter:exports)=
 
@@ -617,7 +651,7 @@ This field can be set to a string value directly or to a License object.
 
 Available fields in the License object are `content` and `code` allowing licenses to be set separately for these two forms of content, as often different subsets of licenses are applicable to each. If you only wish to apply a single license to your page or project use the string form rather than an object.
 
-String values for licenses should be a valid “Identifier” string from the [SPDX License List](https://spdx.org/licenses/). Identifiers for well-known licenses are easily recognizable (e.g. `MIT` or `BSD`) and MyST will attempt to infer the specific identifier if an ambiguous license is specified (e.g. `GPL` will be interpreted as `GPL-3.0+` and a warning raised letting you know of this interpretation). Some common licenses are:
+If selecting a license from the [SPDX License List](https://spdx.org/licenses/), you may simply use the “Identifier” string; MyST will expand these identifiers into objects with `name`, `url`, and additional metadata related to open access ([OSI-approved](https://opensource.org/licenses), [FSF free](https://www.gnu.org/licenses/license-list.en.html), and [CC](https://creativecommons.org/)). Identifiers for well-known licenses are easily recognizable (e.g. `MIT` or `BSD`) and MyST will attempt to infer the specific identifier if an ambiguous license is specified (e.g. `GPL` will be interpreted as `GPL-3.0+` and a warning raised letting you know of this interpretation). Some common licenses are:
 
 ```{list-table}
 :header-rows: 1
@@ -639,7 +673,25 @@ String values for licenses should be a valid “Identifier” string from the [S
     - `AGPL`
 ```
 
-By using the correct SPDX Identifier, your website will automatically use the appropriate icon for the license and link to the license definition.
+By using the correct SPDX Identifier, your website will automatically use the appropriate icon for the license and link to the license definition.  The simplest and most common example is something like:
+
+```yaml
+license: CC-BY-4.0
+```
+
+### Nonstandard licenses
+
+Although not recommended, you may specify nonstandard licenses not found on the SPDX License List. For these, you may provide an object where available fields are `id`, `name`, `url`, and `note`. You can also extend the default SPDX Licenses by providing modified values for these fields. Here is a more complex example where content and code have different licenses; content uses an SPDX License with an additional note, and code uses a totally custom license.
+
+```yaml
+license:
+  content:
+    id: CC-BY-4.0
+    note: When attributing this content, please indicate the Source was MyST Documentation.
+  code:
+    name: I Am Not A Lawyer License
+    url: https://example.com/i-am-not-a-lawyer
+```
 
 (frontmatter:funding)=
 
@@ -710,13 +762,41 @@ The term `venue` is borrowed from the [OpenAlex](https://docs.openalex.org/about
 
 > Venues are where works are hosted.
 
-Available fields in the `venue` object are `title` and `url`.
+For MyST frontmatter, the `venue` object holds metadata for journals and conferences where a work may be presented.
+
+```{list-table} Available Venue fields
+:header-rows: 1
+:label: table-frontmatter-venue
+* - field
+  - description
+* - `title`
+  - full title of the venue
+* - `short_title`
+  - short title of the venue; often journals have a standard abbreviation that should be defined here
+* - `url`
+  - URL of the venue
+* - `doi`
+  - the _venue_ DOI
+* - `number`
+  - number of the venue in a series, for example the "18th Python in Science Conference"
+* - `location`
+  - physical location of a conference
+* - `date`
+  - date associated with the venue, for example the dates of a conference. This field is a string, not a timestamp, so it may be a date range.
+* - `series`
+  - title of a series that this venue or work is part of. Examples include a conference proceedings series, where each year a new conference-specific proceedings journal is created, or a category of articles across multiple issues, such as colloquium papers.
+* - `issn`
+  - ISSN for the publication
+* - `publisher`
+  - publisher of the journal
+```
 
 Some typical `venue` values may be:
 
 ```yaml
 venue:
   title: Journal of Geophysics
+  short_title: J. Geophys
   url: https://journal.geophysicsjournal.com
 ```
 
@@ -728,29 +808,43 @@ venue:
   url: https://www.euroscipy.org/2022
 ```
 
-## Biblio
+(publication-metadata)=
 
-The term `biblio` is borrowed from the [OpenAlex](https://docs.openalex.org/about-the-data/venue) API definition:
+## Publication Metadata
+
+MyST includes several fields to maintain bibliographic metadata for journal publications. First, it has `first_page` and `last_page` - these are page numbers for the article in its printed form. Also, `volume` and `issue` are available to describe the journal volume/issue containing the article. Each of these properties has the same fields available, described in @table-frontmatter-biblio.
+
+
+```{list-table} Available Volume and Issue fields
+:header-rows: 1
+:label: table-frontmatter-biblio
+* - field
+  - description
+* - `number`
+  - a string or a number to identify journal volume/issue
+* - `title`
+  - title of the volume/issue, if provided separately from number
+* - `subject`
+  - description of the subject of the volume/issue
+* - `doi`
+  - the volume/issue DOI
+```
+
+An example of publication metadata for an article may be:
+
+```yaml
+first_page: 1500
+last_page: 1503
+volume:
+  number: 12
+issue:
+  name: Winter
+  description: Special issue on software documentation
+  doi: 10.62329/MYISSUE
+```
+
+These fields provide a more complete superset of publication metadata than the ["biblio" object defined by OpenAlex API](https://docs.openalex.org/about-the-data/venue):
 
 > Old-timey bibliographic info for this work. This is mostly useful only in citation/reference contexts. These are all strings because sometimes you'll get fun values like "Spring" and "Inside cover."
 
-Available fields in the `biblio` object are `volume`, `issue`, `first_page` and `last_page`.
-
-Some example `biblio` values may be:
-
-```yaml
-biblio:
-  volume: '42'
-  issue: '3'
-  first_page: '1' # can be a number or string
-  last_page: '99' # can be a number or string
-```
-
-OR
-
-```yaml
-biblio:
-  volume: '2022'
-  issue: Winter
-  first_page: Inside cover # can be a number or string
-```
+If MyST frontmatter includes an OpenAlex `biblio` object, it will be coerced to valid publication metadata.

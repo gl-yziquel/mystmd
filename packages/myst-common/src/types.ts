@@ -3,6 +3,7 @@ import type { Directive, Node, Role } from 'myst-spec';
 import type { VFile } from 'vfile';
 import type * as nbformat from '@jupyterlab/nbformat';
 import type { PartialJSONObject } from '@lumino/coreutils';
+import type { PageFrontmatter } from 'myst-frontmatter';
 
 export type GenericNode<T extends Record<string, any> = Record<string, any>> = {
   type: string;
@@ -134,10 +135,12 @@ export type MystPlugin = {
   name?: string;
   author?: string;
   license?: string;
-  directives: DirectiveSpec[];
-  roles: RoleSpec[];
-  transforms: TransformSpec[];
+  directives?: DirectiveSpec[];
+  roles?: RoleSpec[];
+  transforms?: TransformSpec[];
 };
+
+export type ValidatedMystPlugin = Required<Pick<MystPlugin, 'directives' | 'roles' | 'transforms'>>;
 
 export enum TargetKind {
   heading = 'heading',
@@ -185,3 +188,7 @@ export interface IExpressionError {
 }
 
 export type IExpressionResult = IExpressionError | IExpressionOutput;
+
+export type FrontmatterPart = { mdast: GenericParent; frontmatter?: PageFrontmatter };
+
+export type FrontmatterParts = Record<string, FrontmatterPart>;

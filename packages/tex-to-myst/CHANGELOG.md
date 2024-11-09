@@ -1,5 +1,108 @@
 # tex-to-myst
 
+## 1.0.40
+
+### Patch Changes
+
+- f888081: Fix tex figures with no arguments
+
+## 1.0.39
+
+### Patch Changes
+
+- 3ce5404c: Update width of image
+- Updated dependencies [eb411d0b]
+  - myst-spec-ext@1.7.4
+  - myst-common@1.7.4
+  - myst-frontmatter@1.7.4
+
+## 1.0.38
+
+### Patch Changes
+
+- ce3c11c: Update inter-version deps
+
+## 1.0.37
+
+### Patch Changes
+
+- e3c3efa7: Add latex support for hyperlink and hypertarget
+- 5d5c2893: Add cancel to latex
+- Updated dependencies [760e411]
+  - myst-frontmatter@1.6.1
+  - myst-common@1.6.1
+  - myst-spec-ext@1.6.1
+
+## 1.0.36
+
+## 1.0.35
+
+### Patch Changes
+
+- 0625105e: Citation improvements for latex (citealp)
+- Updated dependencies [85520edd]
+- Updated dependencies [da224b78]
+- Updated dependencies [4e880f3e]
+- Updated dependencies [e2b74f4d]
+  - myst-frontmatter@1.5.4
+  - myst-spec-ext@1.5.4
+  - myst-common@1.5.4
+
+## 1.0.34
+
+### Patch Changes
+
+- Updated dependencies [857c5acf]
+- Updated dependencies [313b218]
+  - myst-spec-ext@1.5.3
+  - myst-frontmatter@1.5.3
+  - myst-common@1.5.3
+
+## 1.0.33
+
+## 1.0.32
+
+### Patch Changes
+
+- Updated dependencies [134598fd]
+- Updated dependencies [38a45645]
+- Updated dependencies [3fd53be8]
+  - myst-common@1.5.2
+  - myst-frontmatter@1.5.2
+  - myst-spec-ext@1.5.2
+
+## 1.0.31
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - myst-frontmatter@1.5.1
+  - myst-spec-ext@1.5.1
+  - myst-common@1.5.1
+
+## 1.0.30
+
+### Patch Changes
+
+- 8fb32d3a: Support wrapfigure environment
+- cc68b984: Differentiate behavior of newcommand, renewcommand, providecommand
+- de4c3912: Remove curly braces around properties in verbatim latex handler
+- Updated dependencies [1e2092dc]
+  - myst-common@1.4.7
+  - myst-frontmatter@1.4.7
+  - myst-spec-ext@1.4.7
+
+## 1.0.29
+
+### Patch Changes
+
+- Updated dependencies [65ade89]
+- Updated dependencies [435c4329]
+  - myst-frontmatter@1.4.4
+  - myst-common@1.4.4
+  - myst-spec-ext@1.4.4
+
 ## 1.0.28
 
 ## 1.0.27

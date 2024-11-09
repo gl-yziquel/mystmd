@@ -44,18 +44,18 @@ Some performance and accessibility considerations:
 
 ````{seealso}
 :class: dropdown
-# Comparing to JupyterBook & Quarto
+# Comparing to Jupyter Book & Quarto
 
-As a comparison to JupyterBook or Quarto, which are both static site generators for scientific content, and assets built by Sphinx and Pandoc, respectively. There are improvements possible primarily in the bundling of Javascript assets, which is very difficult to do in the Sphinx build process, for example.
+As a comparison to Jupyter Book or Quarto, which are both static site generators for scientific content, and assets built by Sphinx and Pandoc, respectively. There are improvements possible primarily in the bundling of Javascript assets, which is very difficult to do in the Sphinx build process, for example.
 
 ```{figure} ./images/lighthouse-jb-2022_09_15.png
 :label: lighthouse-jb
-Lighthouse score run Sept 15, 2022 on deployed site, the majority of issues are around bundling assets, reducing javascript used, optimizing images, and speed to initial page load.
+Jupyter Book Lighthouse score run Sept 15, 2022 on deployed site, the majority of issues are around bundling assets, reducing javascript used, optimizing images, and speed to initial page load.
 ```
 
 ```{figure} ./images/lighthouse-quarto-2022_09_15.png
 :label: lighthouse-quarto
-Lighthouse score run Sept 15, 2022 on deployed site, the majority of issues are image sizing, main-thread work, and high network payloads.
+Quarto Lighthouse score run Sept 15, 2022 on deployed site, the majority of issues are image sizing, main-thread work, and high network payloads.
 ```
 ````
 
@@ -63,5 +63,5 @@ Lighthouse score run Sept 15, 2022 on deployed site, the majority of issues are 
 The performance metrics above are subject to changes over time, and may differ on your computer, network connection and page analyzed.
 We include these metrics on this page because (1) we have put a lot of work into performance and accessibility 🎉 and (2) to let you know that as MyST developers we care about performance, accessibility, and semantic HTML that can be read by both search engine crawlers and academic indexes.
 
-If you find a place where we can improve performance in your site, please [open an issue](https://github.com/executablebooks/mystmd/issues).
+If you find a place where we can improve performance in your site, please [open an issue](https://github.com/jupyter-book/mystmd/issues).
 ```

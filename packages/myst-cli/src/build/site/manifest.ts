@@ -18,8 +18,10 @@ import type { RootState } from '../../store/index.js';
 import { selectors } from '../../store/index.js';
 import { transformBanner, transformThumbnail } from '../../transforms/images.js';
 import { addWarningForFile } from '../../utils/addWarningForFile.js';
+import { fileTitle } from '../../utils/fileInfo.js';
+import { resolveFrontmatterParts } from '../../utils/resolveFrontmatterParts.js';
 import version from '../../version.js';
-import { getMystTemplate } from './template.js';
+import { getSiteTemplate } from './template.js';
 import { collectExportOptions } from '../utils/collectExportOptions.js';
 import { filterPages } from '../../project/load.js';
 import { getRawFrontmatterFromFile } from '../../process/file.js';
@@ -138,7 +140,7 @@ export async function localToManifestProject(
     proj.pages.map(async (page) => {
       if ('file' in page) {
         const fileInfo = selectors.selectFileInfo(state, page.file);
-        const title = fileInfo.title || page.slug;
+        const title = fileInfo.title || fileTitle(page.file);
         const short_title = fileInfo.short_title ?? undefined;
         const description = fileInfo.description ?? '';
         const thumbnail = fileInfo.thumbnail ?? '';
@@ -173,12 +175,13 @@ export async function localToManifestProject(
   const downloads = projConfigFile
     ? await resolvePageDownloads(session, projConfigFile, projectPath)
     : undefined;
+  const parts = resolveFrontmatterParts(session, projFrontmatter);
   const banner = await transformBanner(
     session,
     path.join(projectPath, 'myst.yml'),
     projFrontmatter,
     session.publicPath(),
-    { altOutputFolder: '/' },
+    { altOutputFolder: '/', webp: true },
   );
   const thumbnail = await transformThumbnail(
     session,
@@ -186,17 +189,25 @@ export async function localToManifestProject(
     path.join(projectPath, 'myst.yml'),
     projFrontmatter,
     session.publicPath(),
-    { altOutputFolder: '/' },
+    { altOutputFolder: '/', webp: true },
   );
   return {
     ...projFrontmatter,
     // TODO: a null in the project frontmatter should not fall back to index page
     thumbnail: thumbnail?.url || projectFileInfo.thumbnail,
-    thumbnailOptimized: thumbnail?.urlOptimized || projectFileInfo.thumbnailOptimized || undefined,
+    thumbnailOptimized:
+      thumbnail?.urlOptimized ||
+      // Do not fall back to optimized page thumbnail if unoptimized project thumbnail exists
+      (thumbnail?.url ? undefined : projectFileInfo.thumbnailOptimized) ||
+      undefined,
     banner: banner?.url || projectFileInfo.banner,
-    bannerOptimized: banner?.urlOptimized || projectFileInfo.bannerOptimized || undefined,
+    bannerOptimized:
+      banner?.urlOptimized ||
+      (banner?.url ? undefined : projectFileInfo.bannerOptimized) ||
+      undefined,
     exports,
     downloads,
+    parts,
     bibliography: projFrontmatter.bibliography || [],
     title: projectTitle || 'Untitled',
     slug: projectSlug,
@@ -211,25 +222,27 @@ async function resolveTemplateFileOptions(
   options: Record<string, any>,
 ) {
   const resolvedOptions = { ...options };
-  mystTemplate.getValidatedTemplateYml().options?.forEach((option) => {
-    if (option.type === TemplateOptionType.file && options[option.id]) {
-      const configPath = selectors.selectCurrentSitePath(session.store.getState());
-      const absPath = configPath
-        ? resolveToAbsolute(session, configPath, options[option.id])
-        : options[option.id];
-      const fileHash = hashAndCopyStaticFile(
-        session,
-        absPath,
-        session.publicPath(),
-        (m: string) => {
-          addWarningForFile(session, options[option.id], m, 'error', {
-            ruleId: RuleId.templateFileCopied,
-          });
-        },
-      );
-      resolvedOptions[option.id] = `/${fileHash}`;
-    }
-  });
+  await Promise.all(
+    (mystTemplate.getValidatedTemplateYml().options ?? []).map(async (option) => {
+      if (option.type === TemplateOptionType.file && options[option.id]) {
+        const configPath = selectors.selectCurrentSitePath(session.store.getState());
+        const absPath = configPath
+          ? await resolveToAbsolute(session, configPath, options[option.id], { allowRemote: true })
+          : options[option.id];
+        const fileHash = hashAndCopyStaticFile(
+          session,
+          absPath,
+          session.publicPath(),
+          (m: string) => {
+            addWarningForFile(session, options[option.id], m, 'error', {
+              ruleId: RuleId.templateFileCopied,
+            });
+          },
+        );
+        resolvedOptions[option.id] = `/${fileHash}`;
+      }
+    }),
+  );
   return resolvedOptions;
 }
 
@@ -382,10 +395,11 @@ export async function getSiteManifest(
     ?.map((action) => resolveSiteAction(session, action, siteConfigFile, 'actions'))
     .filter((action): action is SiteAction => !!action);
   const siteFrontmatter = filterKeys(siteConfig as Record<string, any>, SITE_FRONTMATTER_KEYS);
-  const mystTemplate = await getMystTemplate(session, opts);
+  const mystTemplate = await getSiteTemplate(session, opts);
   const validatedOptions = mystTemplate.validateOptions(
     siteFrontmatter.options ?? {},
     siteConfigFile,
+    { allowRemote: true },
   );
   const validatedFrontmatter = mystTemplate.validateDoc(
     siteFrontmatter,
@@ -395,8 +409,10 @@ export async function getSiteManifest(
   );
   const resolvedOptions = await resolveTemplateFileOptions(session, mystTemplate, validatedOptions);
   validatedFrontmatter.options = resolvedOptions;
+  const parts = resolveFrontmatterParts(session, validatedFrontmatter);
   const manifest: SiteManifest = {
     ...validatedFrontmatter,
+    parts,
     myst: version,
     nav: nav || [],
     actions: actions || [],

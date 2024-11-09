@@ -15,7 +15,7 @@
   "frontmatter": {
     "title": "Plots In Markdown",
     "content_includes_title": false,
-    "github": "https://github.com/executablebooks/mystjs",
+    "github": "https://github.com/jupyter-book/mystmd",
     "keywords": [],
     "exports": [
       {
@@ -197,9 +197,7 @@
                     "metadata": {},
                     "data": {
                       "text/html": {
-                        "content_type": "text/html",
-                        "hash": "b7397eaae9b8b69ecb0927a44a1599c1",
-                        "path": "https://cdn.curvenote.com/018f6819-7b0e-75f4-95e9-960474722f3e/public/b7397eaae9b8b69ecb0927a44a1599c1.html"
+                        "content_type": "text/html"
                       },
                       "text/plain": {
                         "content": "alt.VConcatChart(...)",
@@ -241,7 +239,7 @@
               "kind": "Notebook",
               "slug": "interactive-notebooks",
               "location": "/interactive-notebooks.ipynb",
-              "title": "Interactive Notebooks with MyST"
+              "title": "Generate and Display Rich Outputs"
             }
           },
           {
@@ -275,7 +273,7 @@
               "kind": "Notebook",
               "slug": "interactive-notebooks",
               "location": "/interactive-notebooks.ipynb",
-              "title": "Interactive Notebooks with MyST"
+              "title": "Generate and Display Rich Outputs"
             },
             "children": [
               {
@@ -295,9 +293,7 @@
                     "metadata": {},
                     "data": {
                       "text/html": {
-                        "content_type": "text/html",
-                        "hash": "b7397eaae9b8b69ecb0927a44a1599c1",
-                        "path": "https://cdn.curvenote.com/018f6819-7b0e-75f4-95e9-960474722f3e/public/b7397eaae9b8b69ecb0927a44a1599c1.html"
+                        "content_type": "text/html"
                       },
                       "text/plain": {
                         "content": "alt.VConcatChart(...)",

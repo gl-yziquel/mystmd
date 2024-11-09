@@ -31,6 +31,7 @@ import { getFileContent } from '../utils/getFileContent.js';
 import { addWarningForFile } from '../../utils/addWarningForFile.js';
 import { cleanOutput } from '../utils/cleanOutput.js';
 import { createTempFolder } from '../../utils/createTempFolder.js';
+import { resolveFrontmatterParts } from '../../utils/resolveFrontmatterParts.js';
 import type { ExportWithOutput, ExportResults, ExportFnOptions } from '../types.js';
 import { writeBibtexFromCitationRenderers } from '../utils/bibtex.js';
 
@@ -72,7 +73,9 @@ export function extractTexPart(
   frontmatter: PageFrontmatter,
   templateYml: TemplateYml,
 ): LatexResult | LatexResult[] | undefined {
-  const part = extractPart(mdast, partDefinition.id);
+  const part = extractPart(mdast, partDefinition.id, {
+    frontmatterParts: resolveFrontmatterParts(session, frontmatter),
+  });
   if (!part) return undefined;
   if (!partDefinition.as_list) {
     // Do not build glossaries when extracting parts: references cannot be mapped to definitions
@@ -128,7 +131,7 @@ export async function localArticleToTexRaw(
   opts?: ExportFnOptions,
 ): Promise<ExportResults> {
   const { articles, output } = templateOptions;
-  const { projectPath, extraLinkTransformers } = opts ?? {};
+  const { projectPath, extraLinkTransformers, execute } = opts ?? {};
   const fileArticles = articlesWithFile(articles);
   const content = await getFileContent(
     session,
@@ -141,6 +144,7 @@ export async function localArticleToTexRaw(
       preFrontmatters: fileArticles.map((article) =>
         filterKeys(article, [...PAGE_FRONTMATTER_KEYS, ...Object.keys(FRONTMATTER_ALIASES)]),
       ),
+      execute,
     },
   );
 
@@ -192,7 +196,7 @@ export async function localArticleToTexTemplated(
   opts?: ExportFnOptions,
 ): Promise<ExportResults> {
   const { output, articles, template, imports } = templateOptions;
-  const { projectPath, extraLinkTransformers, clean, ci } = opts ?? {};
+  const { projectPath, extraLinkTransformers, clean, ci, execute } = opts ?? {};
   const filesPath = path.join(path.dirname(output), 'files');
   const fileArticles = articlesWithFile(articles);
   const content = await getFileContent(
@@ -206,6 +210,7 @@ export async function localArticleToTexTemplated(
       preFrontmatters: fileArticles.map((article) =>
         filterKeys(article, [...PAGE_FRONTMATTER_KEYS, ...Object.keys(FRONTMATTER_ALIASES)]),
       ),
+      execute,
     },
   );
   const bibtexWritten = writeBibtexFromCitationRenderers(

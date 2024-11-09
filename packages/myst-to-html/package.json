@@ -1,9 +1,9 @@
 {
   "name": "myst-to-html",
-  "version": "1.4.3",
+  "version": "1.5.8",
   "description": "Export from MyST mdast to HTML",
   "author": "Franklin Koch <franklin@curvenote.com>",
-  "homepage": "https://github.com/executablebooks/mystmd/tree/main/packages/myst-to-html",
+  "homepage": "https://github.com/jupyter-book/mystmd/tree/main/packages/myst-to-html",
   "license": "MIT",
   "type": "module",
   "exports": "./dist/index.js",
@@ -22,7 +22,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/executablebooks/mystmd.git"
+    "url": "git+https://github.com/jupyter-book/mystmd.git"
   },
   "scripts": {
     "clean": "rimraf dist",
@@ -34,7 +34,7 @@
     "build": "npm-run-all -l clean -p build:esm"
   },
   "bugs": {
-    "url": "https://github.com/executablebooks/mystmd/issues"
+    "url": "https://github.com/jupyter-book/mystmd/issues"
   },
   "dependencies": {
     "classnames": "^2.3.2",
@@ -44,7 +44,7 @@
     "mdast": "^3.0.0",
     "mdast-util-find-and-replace": "^2.1.0",
     "mdast-util-to-hast": "^12.3.0",
-    "myst-common": "^1.4.2",
+    "myst-common": "^1.7.4",
     "rehype-format": "^4.0.1",
     "rehype-parse": "^8.0.4",
     "rehype-remark": "^9.1.2",

@@ -1,19 +1,21 @@
 import fs from 'fs-extra';
 import path from 'node:path';
 import { writeFileToFolder } from 'myst-cli-utils';
+import type { MystXRefs } from 'myst-transforms';
 import type { ISession } from '../../session/types.js';
 import type { SiteManifestOptions } from '../site/manifest.js';
 import { getSiteManifest } from '../site/manifest.js';
 import type { StartOptions } from '../site/start.js';
 import { startServer } from '../site/start.js';
-import { getMystTemplate } from '../site/template.js';
+import { getSiteTemplate } from '../site/template.js';
+import { slugToUrl } from 'myst-common';
 
 export async function currentSiteRoutes(
   session: ISession,
   host: string,
   baseurl: string | undefined,
   opts?: SiteManifestOptions,
-) {
+): Promise<{ url: string; path: string; binary?: boolean }[]> {
   const manifest = await getSiteManifest(session, opts);
   return (manifest.projects ?? [])
     ?.map((proj) => {
@@ -26,9 +28,10 @@ export async function currentSiteRoutes(
       return [
         { url: `${host}${projSlug}${siteIndex}`, path: path.join(proj.slug ?? '', 'index.html') },
         ...pages.map((page) => {
+          const pageSlug = slugToUrl(page.slug);
           return {
-            url: `${host}${projSlug}/${page.slug}`,
-            path: path.join(proj.slug ?? '', `${page.slug}.html`),
+            url: `${host}${projSlug}/${pageSlug}`,
+            path: path.join(proj.slug ?? '', `${pageSlug}.html`),
           };
         }),
         // Download all of the configured JSON
@@ -43,9 +46,14 @@ export async function currentSiteRoutes(
           };
         }),
         // Download other assets
-        ...['favicon.ico', 'robots.txt', 'myst-theme.css'].map((asset) => ({
+        ...['robots.txt', 'myst-theme.css'].map((asset) => ({
           url: `${host}/${asset}`,
           path: asset,
+        })),
+        ...['favicon.ico'].map((asset) => ({
+          url: `${host}/${asset}`,
+          path: asset,
+          binary: true,
         })),
       ];
     })
@@ -75,10 +83,9 @@ function rewriteAssetsFolder(directory: string, baseurl?: string): void {
     }
     if (!['.html', '.js', '.json'].includes(path.extname(file))) return;
     const data = fs.readFileSync(file).toString();
-    const modified = data.replace(
-      new RegExp(`\\/${ASSETS_FOLDER}\\/`, 'g'),
-      `${baseurl || ''}/build/`,
-    );
+    const modified = data
+      .replace(new RegExp(`\\/${ASSETS_FOLDER}\\/`, 'g'), `${baseurl || ''}/build/`)
+      .replace('href="/favicon.ico"', `href="${baseurl || ''}/favicon.ico"`);
     fs.writeFileSync(file, modified);
   });
 }
@@ -119,7 +126,7 @@ function get_baseurl(session: ISession): string | undefined {
  * @param opts configuration options
  */
 export async function buildHtml(session: ISession, opts: StartOptions) {
-  const template = await getMystTemplate(session, opts);
+  const template = await getSiteTemplate(session, opts);
   // The BASE_URL env variable allows for mounting the site in a folder, e.g., github pages
   const baseurl = get_baseurl(session);
   // Note, this process is really only for Remix templates
@@ -134,14 +141,24 @@ export async function buildHtml(session: ISession, opts: StartOptions) {
 
   // Fetch all HTML pages and assets by the template
   await Promise.all(
-    routes.map(async (page) => {
-      const resp = await session.fetch(page.url);
+    routes.map(async (route) => {
+      const resp = await session.fetch(route.url);
       if (!resp.ok) {
-        session.log.error(`Error fetching ${page.url}`);
+        session.log.error(`Error fetching ${route.url}`);
         return;
       }
-      const content = await resp.text();
-      writeFileToFolder(path.join(htmlDir, page.path), content);
+      if (route.binary && resp.body) {
+        await new Promise<void>((resolve) => {
+          const filename = path.join(htmlDir, route.path);
+          if (!fs.existsSync(filename)) fs.mkdirSync(path.dirname(filename), { recursive: true });
+          const fileWriteStream = fs.createWriteStream(filename);
+          resp.body!.pipe(fileWriteStream);
+          fileWriteStream.on('finish', resolve);
+        });
+      } else {
+        const content = await resp.text();
+        writeFileToFolder(path.join(htmlDir, route.path), content);
+      }
     }),
   );
   appServer.stop();
@@ -154,9 +171,20 @@ export async function buildHtml(session: ISession, opts: StartOptions) {
   fs.copySync(session.publicPath(), path.join(htmlDir, 'build'));
   fs.copySync(path.join(session.sitePath(), 'config.json'), path.join(htmlDir, 'config.json'));
   fs.copySync(path.join(session.sitePath(), 'objects.inv'), path.join(htmlDir, 'objects.inv'));
+
+  // NOTE: HTML static output needs to patch the contents, this is done on the fly by the server
+  const xrefs = JSON.parse(
+    fs.readFileSync(path.join(session.sitePath(), 'myst.xref.json')).toString(),
+  ) as MystXRefs;
+  xrefs.references?.forEach((ref) => {
+    ref.data = ref.data?.replace(/^\/content/, '');
+  });
+  fs.writeFileSync(path.join(htmlDir, 'myst.xref.json'), JSON.stringify(xrefs));
+
+  // Copy the search index
   fs.copySync(
-    path.join(session.sitePath(), 'myst.xref.json'),
-    path.join(htmlDir, 'myst.xref.json'),
+    path.join(session.sitePath(), 'myst.search.json'),
+    path.join(htmlDir, 'myst.search.json'),
   );
 
   // We need to go through and change all links to the right folder

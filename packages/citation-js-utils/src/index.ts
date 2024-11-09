@@ -1,10 +1,14 @@
-import { Cite } from '@citation-js/core';
+import { Cite, plugins } from '@citation-js/core';
 import { doi as doiUtils } from 'doi-utils';
 import { clean as cleanCSL } from '@citation-js/core/lib/plugins/input/csl.js';
 import sanitizeHtml from 'sanitize-html';
 
 import '@citation-js/plugin-bibtex';
 import '@citation-js/plugin-csl';
+
+const config = plugins.config.get('@bibtex');
+config.format.useIdAsLabel = true;
+config.format.checkLabel = false;
 
 const DOI_IN_TEXT = /(10.\d{4,9}\/[-._;()/:A-Z0-9]*[A-Z0-9])/i;
 
@@ -14,12 +18,14 @@ export type CSL = {
   id: string;
   author?: { given: string; family: string; literal?: string }[];
   issued?: { 'date-parts'?: number[][]; literal?: string };
+  accessed?: { 'date-parts'?: number[][]; literal?: string };
   publisher?: string;
   title?: string;
   'citation-key'?: string;
   'container-title'?: string;
   abstract?: string;
   DOI?: string;
+  URL?: string;
   ISBN?: string;
   ISSN?: string;
   issue?: string;
@@ -60,9 +66,10 @@ export enum InlineCite {
 }
 
 export function yearFromCitation(data: CSL) {
-  let year: number | string | undefined = data.issued?.['date-parts']?.[0]?.[0];
+  const date = data.issued ?? data.accessed;
+  let year: number | string | undefined = date?.['date-parts']?.[0]?.[0];
   if (year) return year;
-  year = data.issued?.['literal']?.match(/\b[12][0-9]{3}\b/)?.[0];
+  year = date?.['literal']?.match(/\b[12][0-9]{3}\b/)?.[0];
   if (year) return year;
   return 'n.d.';
 }
@@ -199,7 +206,49 @@ export function parseCSLJSON(source: object[]): CSL[] {
  */
 export async function getCitations(bibtex: string): Promise<CitationRenderer> {
   const csl = parseBibTeX(bibtex);
-  return await getCitationRenderers(csl);
+  return getCitationRenderers(csl);
+}
+
+/**
+ * Generate a label from a citation
+ *
+ * formatLabel is pulled directly from citation-js
+ *
+ * This would be used always if `config.format.useIdAsLabel = false`, but is used never
+ * when `config.format.useIdAsLabel = true`. We want to use it sometimes - only when
+ * no ide is provided.
+ */
+function formatLabel(c: CSL): string {
+  const stopWords = new Set(['the', 'a', 'an']);
+  const unsafeChars = /(?:<\/?.*?>|[\u0020-\u002F\u003A-\u0040\u005B-\u005E\u0060\u007B-\u007F])+/g;
+  const unicode = /[^\u0020-\u007F]+/g;
+  const firstWord = (text?: string): string => {
+    if (!text) {
+      return '';
+    } else {
+      return (
+        text
+          .normalize('NFKD')
+          .replace(unicode, '')
+          .split(unsafeChars)
+          .find((word) => word.length && !stopWords.has(word.toLowerCase())) ?? ''
+      );
+    }
+  };
+  const { author, issued, suffix, title } = c;
+  let label = '';
+  if (author && author[0]) {
+    label += firstWord(author[0].family || author[0].literal);
+  }
+  if (issued && issued['date-parts'] && issued['date-parts'][0]) {
+    label += issued['date-parts'][0][0];
+  }
+  if (suffix) {
+    label += suffix;
+  } else if (title) {
+    label += firstWord(title);
+  }
+  return label;
 }
 
 /**
@@ -207,7 +256,7 @@ export async function getCitations(bibtex: string): Promise<CitationRenderer> {
  *
  * @param data - array of CSL items
  */
-export async function getCitationRenderers(data: CSL[]): Promise<CitationRenderer> {
+export function getCitationRenderers(data: CSL[]): CitationRenderer {
   const cite = new Cite();
   return Object.fromEntries(
     data.map((c): [string, CitationRenderer[0]] => {
@@ -215,6 +264,25 @@ export async function getCitationRenderers(data: CSL[]): Promise<CitationRendere
       if (!c.DOI && matchDoi) {
         c.DOI = matchDoi[0];
       }
+      if (!c.id) {
+        c.id = formatLabel(c);
+      }
+      // Trim the titles, DOIs, etc. on load
+      [
+        'title',
+        'note',
+        'publisher',
+        'page',
+        'volume',
+        'issue',
+        'container-title',
+        'DOI',
+        'ISSN',
+      ].forEach((tag) => {
+        if (c[tag] && typeof c[tag] === 'string') c[tag] = c[tag].trim();
+      });
+      // Trim the DOIs and URLs (these are encoded) on load
+      if (c.URL) c.URL = c.URL.replace(/^(%20)*/, '').replace(/(%20)*$/, '');
       return [
         c.id,
         {

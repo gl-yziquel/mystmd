@@ -1,9 +1,9 @@
 ---
 title: Document Parts
-description: Parts allow you to specify special parts of your document, like abstract, keypoints acknowledgements.
+description: Parts allow you to specify special parts of your document, like abstract, key points, and acknowledgements.
 ---
 
-Document parts allow you to add metadata to your documents with specific components of your page, for example, abstract, dedication, or acknowledgments. Many templates put these in specific places.
+Document parts allow you to add metadata to your documents with specific components of your page or project, for example, abstract, dedication, or acknowledgments. Many templates put these in specific places.
 
 There are three ways that you can define parts of a document: (1) in your page frontmatter; (2) implicitly using a section heading; and (3) on a block using a `part` or `tag` annotation. These are all based on a part name, which is case insensitive.
 
@@ -19,6 +19,15 @@ title: My document
 abstract: |
   This is a multi-line
   abstract, with _markdown_!
+---
+```
+
+You may also write your part in a separate file, and point to that file from the frontmatter, for example:
+
+```yaml
+---
+title: My document
+abstract: ../abstract.md
 ---
 ```
 
@@ -60,8 +69,7 @@ If you have a custom part name for a template, you can nest it under `parts:`, w
 title: My document
 parts:
   special_part: |
-    This is a multi-line
-    abstract, with _markdown_!
+    This is another _special_ part!
 ---
 ```
 
@@ -94,4 +102,43 @@ When using a Jupyter Notebook, you can add a `tag` to the cell with the part nam
 This is my abstract block.
 
 +++
+```
+
+(parts:project)=
+
+## Parts in `myst.yml` Project configuration
+
+You may also specify `parts` in the project configuration of your `myst.yml` file. These are defined exactly the same as [`parts` defined in page frontmatter](#parts:frontmatter).
+
+```yaml
+version: 1
+project:
+  abstract:  |
+    This is a multi-line
+    abstract, with _markdown_!
+  parts:
+    special_part: |
+      This is another _special_ part!
+```
+
+Project-level `parts` are useful, for example, if you have an abstract, acknowledgments, or other part that applies to your entire project and doesn't make sense attached to an individual page.
+
+```{caution}
+Project-level `parts` are a new feature and may not yet be respected by your chosen MyST template or export format. If the project `part` is not behaving as you expect, try moving it to page frontmatter for now.
+```
+
+(parts:site)=
+
+## Parts in `myst.yml` Site configuration
+
+You may specify `parts` in the site configuration of your `myst.yml` file. These parts will only be used for MyST site builds, and they must correspond to `parts` declared in your [website theme's template](website-templates.md).
+
+```yaml
+version: 1
+site:
+  template: ...
+  parts:
+    footer: |
+      (c) MyST Markdown
+  ...
 ```

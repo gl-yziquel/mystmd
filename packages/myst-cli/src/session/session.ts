@@ -3,11 +3,13 @@ import type { Store } from 'redux';
 import { createStore } from 'redux';
 import type { Logger } from 'myst-cli-utils';
 import { chalkLogger, LogLevel } from 'myst-cli-utils';
-import type { MystPlugin, RuleId } from 'myst-common';
+import type { RuleId, ValidatedMystPlugin } from 'myst-common';
 import latestVersion from 'latest-version';
 import boxen from 'boxen';
 import chalk from 'chalk';
 import { HttpsProxyAgent } from 'https-proxy-agent';
+import pLimit from 'p-limit';
+import type { Limit } from 'p-limit';
 import {
   findCurrentProjectAndLoad,
   findCurrentSiteAndLoad,
@@ -74,6 +76,7 @@ export class Session implements ISession {
   configFiles: string[];
   store: Store<RootState>;
   $logger: Logger;
+  doiLimiter: Limit;
 
   proxyAgent?: HttpsProxyAgent<string>;
   _shownUpgrade = false;
@@ -84,14 +87,14 @@ export class Session implements ISession {
     return this.$logger;
   }
 
-  constructor(opts: { logger?: Logger } = {}) {
+  constructor(opts: { logger?: Logger; doiLimiter?: Limit } = {}) {
     this.API_URL = API_URL;
     this.configFiles = CONFIG_FILES;
     this.$logger = opts.logger ?? chalkLogger(LogLevel.info, process.cwd());
+    this.doiLimiter = opts.doiLimiter ?? pLimit(3);
     const proxyUrl = process.env.HTTPS_PROXY;
     if (proxyUrl) this.proxyAgent = new HttpsProxyAgent(proxyUrl);
     this.store = createStore(rootReducer);
-    this.reload();
     // Allow the latest version to be loaded
     latestVersion('mystmd')
       .then((latest) => {
@@ -113,11 +116,11 @@ export class Session implements ISession {
     this._shownUpgrade = true;
   }
 
-  reload() {
-    findCurrentProjectAndLoad(this, '.');
-    findCurrentSiteAndLoad(this, '.');
+  async reload() {
+    await findCurrentProjectAndLoad(this, '.');
+    await findCurrentSiteAndLoad(this, '.');
     if (selectors.selectCurrentSitePath(this.store.getState())) {
-      reloadAllConfigsForCurrentSite(this);
+      await reloadAllConfigsForCurrentSite(this);
     }
     return this;
   }
@@ -130,13 +133,18 @@ export class Session implements ISession {
       init = { agent: this.proxyAgent, ...init };
       this.log.debug(`Using HTTPS proxy: ${this.proxyAgent.proxy}`);
     }
+    const logData = { url: urlOnly, done: false };
+    setTimeout(() => {
+      if (!logData.done) this.log.info(`⏳ Waiting for response from ${url}`);
+    }, 5000);
     const resp = await nodeFetch(url, init);
+    logData.done = true;
     return resp;
   }
 
-  plugins: MystPlugin | undefined;
+  plugins: ValidatedMystPlugin | undefined;
 
-  _pluginPromise: Promise<MystPlugin> | undefined;
+  _pluginPromise: Promise<ValidatedMystPlugin> | undefined;
 
   async loadPlugins() {
     // Early return if a promise has already been initiated
@@ -172,8 +180,9 @@ export class Session implements ISession {
 
   _clones: ISession[] = [];
 
-  clone(): Session {
-    const cloneSession = new Session({ logger: this.log });
+  async clone() {
+    const cloneSession = new Session({ logger: this.log, doiLimiter: this.doiLimiter });
+    await cloneSession.reload();
     // TODO: clean this up through better state handling
     cloneSession._jupyterSessionManagerPromise = this._jupyterSessionManagerPromise;
     this._clones.push(cloneSession);
@@ -242,6 +251,10 @@ export class Session implements ISession {
   }
 
   dispose() {
+    this._clones.forEach((session) => {
+      session.dispose();
+    });
+
     if (this._jupyterSessionManagerPromise) {
       this._jupyterSessionManagerPromise.then((manager) => manager?.dispose?.());
       this._jupyterSessionManagerPromise = undefined;

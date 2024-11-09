@@ -12,7 +12,7 @@ There are two directives available to add exercises and solutions to your docume
 
 The implementation and documentation for exercises and solutions is based on [Sphinx Exercise](https://ebp-sphinx-exercise.readthedocs.io), the syntax can be used interchangeably. We have reused the examples in that extension here to show off the various parts of the MyST extension.
 
-Changes to the original extension include being able to click on the exercise label (e.g. "Exercise 1"), and having a link to that exercise anchor. We have also updated the styles from both Sphinx and JupyterBook to be more distinct from admonitions.
+Changes to the original extension include being able to click on the exercise label (e.g. "Exercise 1"), and having a link to that exercise anchor. We have also updated the styles from both Sphinx and Jupyter Book to be more distinct from admonitions.
 
 You can also reference exercises with any cross-reference syntax (including the {myst:role}`ref` and {myst:role}`numref` roles). We recommend the markdown link syntax.
 :::
@@ -250,7 +250,7 @@ to include in an exercise or solution admonition.
 
 and maybe you wish to add a figure
 
-```{figure} https://source.unsplash.com/random/400x200?beach,ocean
+```{figure} https://github.com/rowanc1/pics/blob/main/beach.png
 
 ```
 
@@ -269,7 +269,7 @@ and maybe you wish to add a figure
 
 and maybe you wish to add a figure
 
-```{figure} https://source.unsplash.com/random/400x200?beach,ocean
+```{figure} https://github.com/rowanc1/pics/blob/main/sunset.png
 
 ```
 

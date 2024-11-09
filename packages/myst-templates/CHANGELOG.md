@@ -1,5 +1,51 @@
 # myst-templates
 
+## 1.0.23
+
+### Patch Changes
+
+- ce3c11c: Update inter-version deps
+
+## 1.0.22
+
+### Patch Changes
+
+- 313b218: Eliminate frontmatter validation warnings for template doc
+- Updated dependencies [313b218]
+  - myst-frontmatter@1.5.3
+  - myst-common@1.5.3
+
+## 1.0.21
+
+### Patch Changes
+
+- 0b3bf03: Validate template doc as project frontmatter
+- Updated dependencies [134598fd]
+- Updated dependencies [38a45645]
+- Updated dependencies [3fd53be8]
+  - myst-common@1.5.2
+  - myst-frontmatter@1.5.2
+
+## 1.0.20
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - simple-validators@1.0.6
+  - myst-frontmatter@1.5.1
+  - myst-cli-utils@2.0.10
+  - myst-common@1.5.1
+
+## 1.0.19
+
+### Patch Changes
+
+- fec350ab: Allow remote files for template/site options
+- Updated dependencies [4cea894]
+  - myst-frontmatter@1.4.6
+  - myst-common@1.4.6
+
 ## 1.0.18
 
 ### Patch Changes
@@ -395,7 +441,7 @@
 
 ### Patch Changes
 
-- 184ad9f9: Move to https://github.com/executablebooks/mystmd
+- 184ad9f9: Move to https://github.com/jupyter-book/mystmd
 - 615c1441: Sessions are now aware of their build path (making things more consistent)
   For example, change the template location to the site working directory.
 

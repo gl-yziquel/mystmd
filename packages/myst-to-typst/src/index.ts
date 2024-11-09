@@ -1,9 +1,9 @@
-import type { Root, Parent, Code } from 'myst-spec';
+import type { Root, Parent } from 'myst-spec';
 import type { Plugin } from 'unified';
 import type { VFile } from 'vfile';
 import type { GenericNode } from 'myst-common';
 import { fileError, fileWarn, toText, getMetadataTags } from 'myst-common';
-import { captionHandler, containerHandler } from './container.js';
+import { captionHandler, containerHandler, getDefaultCaptionSupplement } from './container.js';
 import type {
   Handler,
   ITypstSerializer,
@@ -19,9 +19,9 @@ import {
   stringToTypstMath,
   stringToTypstText,
 } from './utils.js';
-import MATH_HANDLERS, { withRecursiveCommands } from './math.js';
+import MATH_HANDLERS, { resolveRecursiveCommands } from './math.js';
 import { select, selectAll } from 'unist-util-select';
-import type { Admonition, FootnoteDefinition } from 'myst-spec-ext';
+import type { Admonition, Code, CrossReference, FootnoteDefinition, TabItem } from 'myst-spec-ext';
 import { tableCellHandler, tableHandler, tableRowHandler } from './table.js';
 
 export type { TypstResult } from './types.js';
@@ -57,10 +57,40 @@ const admonitionMacros = {
     '#let warningBlock(body, heading: [Warning]) = admonition(body, heading: heading, color: yellow)',
 };
 
-const blockquote = `#let blockquote(node, color: gray) = {
-  let stroke = (left: 2pt + color.darken(20%))
-  set text(fill: black.lighten(40%), style: "oblique")
-  block(width: 100%, inset: 8pt, stroke: stroke)[#node]
+const tabSet = `
+#let tabSet(body) = {
+  block(width: 100%, stroke: luma(240), [#body])
+}`;
+const tabItem = `
+#let tabItem(body, heading: none) = {
+  let title
+  if heading != none {
+    title = block(width: 100%, inset: (x: 8pt, y: 4pt), fill: luma(250))[#text(9pt, weight: "bold")[#heading]]
+  }
+  block(width: 100%, [
+    #title
+    #block(width: 100%, inset: (x: 8pt, bottom: 8pt))[#body]
+  ])
+}`;
+
+const proof = `
+#let proof(body, heading: [], kind: "proof", supplement: "Proof", labelName: none, color: blue, float: true) = {
+  let stroke = 1pt + color.lighten(90%)
+  let fill = color.lighten(90%)
+  let title
+  set figure.caption(position: top)
+  set figure(placement: none)
+  show figure.caption.where(body: heading): (it) => {
+    block(width: 100%, stroke: stroke, fill: fill, inset: 8pt, it)
+  }
+  place(auto, float: float, block(width: 100%, [
+    #figure(kind: kind, supplement: supplement, gap: 0pt, [
+      #set align(left);
+      #set figure.caption(position: bottom)
+      #block(width: 100%, fill: luma(253), stroke: stroke, inset: 8pt)[#body]
+    ], caption: heading)
+    #if(labelName != none){label(labelName)}
+  ]))
 }`;
 
 const INDENT = '  ';
@@ -112,8 +142,13 @@ const handlers: Record<string, Handler> = {
     state.renderChildren(node, 2);
   },
   blockquote(node, state) {
-    state.useMacro(blockquote);
-    state.renderEnvironment(node, 'blockquote');
+    if (state.data.isInBlockquote) {
+      state.renderChildren(node);
+      return;
+    }
+    state.write('#quote(block: true)[');
+    state.renderChildren(node);
+    state.write(']');
   },
   definitionList(node, state) {
     let dedent = false;
@@ -138,6 +173,9 @@ const handlers: Record<string, Handler> = {
     state.renderChildren(node);
   },
   code(node: Code, state) {
+    if (node.visibility === 'remove') {
+      return;
+    }
     let ticks = '```';
     while (node.value.includes(ticks)) {
       ticks += '`';
@@ -263,7 +301,7 @@ const handlers: Record<string, Handler> = {
     }
     state.useMacro(admonitionMacros[node.kind]);
     state.write(`#${node.kind}Block`);
-    if (title && toText(title).toLowerCase().replace(' ', '') !== node.kind) {
+    if (title && toText(title).toLowerCase().replaceAll(' ', '') !== node.kind) {
       state.write('(heading: [');
       state.renderChildren(title);
       state.write('])');
@@ -290,11 +328,33 @@ const handlers: Record<string, Handler> = {
     }
     state.write(')\n\n');
   },
+  iframe(node, state) {
+    const image = node.children?.[0];
+    if (!image || image.placeholder !== true) return;
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { width: nodeWidth, url: nodeSrc, align } = image;
+    const src = nodeSrc;
+    const width = getLatexImageWidth(nodeWidth);
+    state.write(`#image("${src}"`);
+    if (!state.data.isInTable) {
+      state.write(`, width: ${width}`);
+    }
+    state.write(')\n\n');
+  },
   container: containerHandler,
   caption: captionHandler,
   legend: captionHandler,
   captionNumber: () => undefined,
-  crossReference(node, state, parent) {
+  crossReference(node: CrossReference, state, parent) {
+    if (node.remote) {
+      // We don't want to handle remote references, treat them as links
+      const url =
+        (node.remoteBaseUrl ?? '') +
+        (node.url === '/' ? '' : node.url ?? '') +
+        (node.html_id ? `#${node.html_id}` : '');
+      linkHandler({ ...node, url: url }, state);
+      return;
+    }
     // Look up reference and add the text
     // const usedTemplate = node.template?.includes('%s') ? node.template : undefined;
     // const text = (usedTemplate ?? toText(node))?.replace(/\s/g, '~') || '%s';
@@ -354,6 +414,67 @@ const handlers: Record<string, Handler> = {
   span(node, state) {
     state.renderChildren(node, 0, { trimEnd: false });
   },
+  raw(node, state) {
+    if (node.typst) {
+      state.write(node.typst);
+    } else if (node.children?.length) {
+      state.renderChildren(node, undefined, { trimEnd: false });
+    }
+  },
+  tabSet(node, state) {
+    state.useMacro(tabSet);
+    state.write('#tabSet[\n');
+    state.renderChildren(node);
+    state.write('\n]\n\n');
+  },
+  tabItem(node: TabItem, state) {
+    state.useMacro(tabItem);
+    state.ensureNewLine();
+    const title = node.title;
+    state.write(`#tabItem(heading: [${title}])[\n`);
+    state.renderChildren(node);
+    state.write('\n]\n\n');
+  },
+  proof(node: GenericNode, state) {
+    state.useMacro(proof);
+    const title = select('admonitionTitle', node);
+    const kind = node.kind || 'proof';
+    const supplement = getDefaultCaptionSupplement(kind);
+    state.write(
+      `#proof(kind: "${kind}", supplement: "${supplement}", labelName: ${node.identifier ? `"${node.identifier}"` : 'none'}`,
+    );
+    if (title) {
+      state.write(', heading: [');
+      state.renderChildren(title);
+      state.write('])[');
+    } else {
+      state.write(')[');
+    }
+    state.renderChildren(node);
+    state.write(']');
+    state.ensureNewLine();
+  },
+  card(node, state) {
+    if (node.url) {
+      node.children?.push({ type: 'paragraph', children: [{ type: 'text', value: node.url }] });
+    }
+    state.renderChildren(node);
+    state.ensureNewLine();
+    state.write('\n');
+  },
+  cardTitle(node, state) {
+    state.write('*');
+    state.renderChildren(node);
+    state.write('*');
+    state.ensureNewLine();
+    state.write('\n');
+  },
+  root(node, state) {
+    state.renderChildren(node);
+  },
+  footer() {
+    return;
+  },
 };
 
 class TypstSerializer implements ITypstSerializer {
@@ -366,7 +487,9 @@ class TypstSerializer implements ITypstSerializer {
   constructor(file: VFile, tree: Root, opts?: Options) {
     file.result = '';
     this.file = file;
-    this.options = opts ?? {};
+    const { math, ...otherOpts } = opts ?? {};
+    this.options = { ...otherOpts };
+    if (math) this.options.math = resolveRecursiveCommands(math);
     this.data = { mathPlugins: {}, macros: new Set() };
     this.handlers = opts?.handlers ?? handlers;
     this.footnotes = Object.fromEntries(
@@ -410,10 +533,15 @@ class TypstSerializer implements ITypstSerializer {
   }
 
   renderChildren(
-    node: Partial<Parent>,
+    node: Partial<Parent> | Parent[],
     trailingNewLines = 0,
-    { delim = '', trimEnd = true }: RenderChildrenOptions = {},
+    opts: RenderChildrenOptions = {},
   ) {
+    if (Array.isArray(node)) {
+      this.renderChildren({ children: node }, trailingNewLines, opts);
+      return;
+    }
+    const { delim = '', trimEnd = true } = opts;
     const numChildren = node.children?.length ?? 0;
     node.children?.forEach((child, index) => {
       if (!child) return;
@@ -451,7 +579,7 @@ const plugin: Plugin<[Options?], Root, VFile> = function (opts) {
     const tex = (file.result as string).trim();
     const result: TypstResult = {
       macros: [...state.data.macros],
-      commands: withRecursiveCommands(state),
+      commands: state.data.mathPlugins,
       value: tex,
     };
     file.result = result;

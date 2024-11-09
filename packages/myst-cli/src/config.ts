@@ -1,11 +1,11 @@
 import fs from 'node:fs';
-import { dirname, join, relative, resolve } from 'node:path';
+import { dirname, extname, join, relative, resolve } from 'node:path';
 import yaml from 'js-yaml';
-import { writeFileToFolder } from 'myst-cli-utils';
+import { writeFileToFolder, isUrl, computeHash } from 'myst-cli-utils';
 import { fileError, fileWarn, RuleId } from 'myst-common';
 import type { Config, ProjectConfig, SiteConfig, SiteProject } from 'myst-config';
 import { validateProjectConfig, validateSiteConfig } from 'myst-config';
-import { fillProjectFrontmatter } from 'myst-frontmatter';
+import { fillProjectFrontmatter, fillSiteFrontmatter } from 'myst-frontmatter';
 import type { ValidationOptions } from 'simple-validators';
 import {
   incrementOptions,
@@ -13,10 +13,11 @@ import {
   validationError,
   validateList,
   validateString,
-  fillMissingKeys,
 } from 'simple-validators';
 import { VFile } from 'vfile';
 import { prepareToWrite } from './frontmatter.js';
+import { loadFrontmatterParts } from './process/file.js';
+import { cachePath, loadFromCache, writeToCache } from './session/cache.js';
 import type { ISession } from './session/types.js';
 import { selectors } from './store/index.js';
 import { config } from './store/reducers.js';
@@ -83,8 +84,55 @@ function configValidationOpts(vfile: VFile, property: string, ruleId: RuleId): V
 /**
  * Function to add filler keys to base if the keys are not defined in base
  */
-function fillSiteConfig(base: SiteConfig, filler: SiteConfig) {
-  return fillMissingKeys(base, filler, Object.keys(filler));
+function fillSiteConfig(base: SiteConfig, filler: SiteConfig, opts: ValidationOptions) {
+  return fillSiteFrontmatter(base, filler, opts, Object.keys(filler));
+}
+
+/**
+ * Mutate config object to coerce deprecated frontmatter fields to valid schema
+ */
+export function handleDeprecatedFields(
+  conf: {
+    site?: Record<string, any>;
+    project?: Record<string, any>;
+  },
+  file: string,
+  vfile: VFile,
+) {
+  if (conf.site?.frontmatter) {
+    fileWarn(
+      vfile,
+      `Frontmatter fields should be defined directly on site, not nested under "${file}#site.frontmatter"`,
+      { ruleId: RuleId.configHasNoDeprecatedFields },
+    );
+    const { frontmatter, ...rest } = conf.site;
+    conf.site = { ...frontmatter, ...rest };
+  }
+  if (conf.project?.frontmatter) {
+    fileWarn(
+      vfile,
+      `Frontmatter fields should be defined directly on project, not nested under "${file}#project.frontmatter"`,
+      { ruleId: RuleId.configHasNoDeprecatedFields },
+    );
+    const { frontmatter, ...rest } = conf.project;
+    conf.project = { ...frontmatter, ...rest };
+  }
+  if (conf.project?.biblio) {
+    fileWarn(
+      vfile,
+      `biblio is deprecated, please use first_page/last_page/volume/issue fields "${file}#project"`,
+      { ruleId: RuleId.configHasNoDeprecatedFields },
+    );
+    const { biblio, ...rest } = conf.project;
+    conf.project = { ...biblio, ...rest };
+  }
+  if (conf.site?.logoText) {
+    fileWarn(vfile, `logoText is deprecated, please use logo_text in "${file}#site"`, {
+      ruleId: RuleId.configHasNoDeprecatedFields,
+    });
+    const { logoText, ...rest } = conf.site;
+    conf.site = { logo_text: logoText, ...rest };
+  }
 }
 
 /**
@@ -94,7 +142,7 @@ function fillSiteConfig(base: SiteConfig, filler: SiteConfig) {
  *
  * Throws errors config file is malformed or invalid.
  */
-function getValidatedConfigsFromFile(
+async function getValidatedConfigsFromFile(
   session: ISession,
   file: string,
   vfile?: VFile,
@@ -125,73 +173,62 @@ function getValidatedConfigsFromFile(
     throw Error(`Please address invalid config file ${file}`);
   }
   // Keep original config object with extra keys, etc.
-  if (conf.site?.frontmatter) {
-    fileWarn(
-      vfile,
-      `Frontmatter fields should be defined directly on site, not nested under "${file}#site.frontmatter"`,
-      { ruleId: RuleId.configHasNoDeprecatedFields },
-    );
-    const { frontmatter, ...rest } = conf.site;
-    conf.site = { ...frontmatter, ...rest };
-  }
-  if (conf.project?.frontmatter) {
-    fileWarn(
-      vfile,
-      `Frontmatter fields should be defined directly on project, not nested under "${file}#project.frontmatter"`,
-      { ruleId: RuleId.configHasNoDeprecatedFields },
-    );
-    const { frontmatter, ...rest } = conf.project;
-    conf.project = { ...frontmatter, ...rest };
-  }
-  if (conf.site?.logoText) {
-    fileWarn(vfile, `logoText is deprecated, please use logo_text in "${file}#site"`, {
-      ruleId: RuleId.configHasNoDeprecatedFields,
-    });
-    const { logoText, ...rest } = conf.site;
-    conf.site = { logo_text: logoText, ...rest };
-  }
+  handleDeprecatedFields(conf, file, vfile);
   let site: SiteConfig | undefined;
   let project: ProjectConfig | undefined;
   const projectOpts = configValidationOpts(vfile, 'config.project', RuleId.validProjectConfig);
   let extend: string[] | undefined;
   if (conf.extend) {
-    extend = validateList(
-      conf.extend,
-      { coerce: true, ...incrementOptions('extend', opts) },
-      (item, index) => {
-        const relativeFile = validateString(item, incrementOptions(`extend.${index}`, opts));
-        if (!relativeFile) return relativeFile;
-        return resolveToAbsolute(session, dirname(file), relativeFile);
-      },
+    extend = await Promise.all(
+      (
+        validateList(
+          conf.extend,
+          { coerce: true, ...incrementOptions('extend', opts) },
+          (item, index) => {
+            return validateString(item, incrementOptions(`extend.${index}`, opts));
+          },
+        ) ?? []
+      ).map(async (extendFile) => {
+        const resolvedFile = await resolveToAbsolute(session, dirname(file), extendFile, {
+          allowRemote: true,
+        });
+        return resolvedFile;
+      }),
     );
     stack = [...(stack ?? []), file];
-    extend?.forEach((extFile) => {
-      if (stack?.includes(extFile)) {
-        fileError(vfile, 'Circular dependency encountered during "config.extend" resolution', {
-          ruleId: RuleId.validConfigStructure,
-          note: [...stack, extFile].map((f) => resolveToRelative(session, '.', f)).join(' > '),
-        });
-        return;
-      }
-      const { site: extSite, project: extProject } = getValidatedConfigsFromFile(
-        session,
-        extFile,
-        vfile,
-        stack,
-      );
-      session.store.dispatch(config.actions.receiveConfigExtension({ file: extFile }));
-      if (extSite) {
-        site = site ? fillSiteConfig(extSite, site) : extSite;
-      }
-      if (extProject) {
-        project = project ? fillProjectFrontmatter(extProject, project, projectOpts) : extProject;
-      }
-    });
+    await Promise.all(
+      (extend ?? []).map(async (extFile) => {
+        if (stack?.includes(extFile)) {
+          fileError(vfile, 'Circular dependency encountered during "config.extend" resolution', {
+            ruleId: RuleId.validConfigStructure,
+            note: [...stack, extFile].map((f) => resolveToRelative(session, '.', f)).join(' > '),
+          });
+          return;
+        }
+        const { site: extSite, project: extProject } = await getValidatedConfigsFromFile(
+          session,
+          extFile,
+          vfile,
+          stack,
+        );
+        session.store.dispatch(config.actions.receiveConfigExtension({ file: extFile }));
+        if (extSite) {
+          site = site ? fillSiteConfig(extSite, site, incrementOptions('extend', opts)) : extSite;
+        }
+        if (extProject) {
+          project = project ? fillProjectFrontmatter(extProject, project, projectOpts) : extProject;
+        }
+      }),
+    );
   }
   const { site: rawSite, project: rawProject } = conf ?? {};
   const path = dirname(file);
   if (rawSite) {
-    site = fillSiteConfig(validateSiteConfigAndThrow(session, path, vfile, rawSite), site ?? {});
+    site = fillSiteConfig(
+      await validateSiteConfigAndThrow(session, path, vfile, rawSite),
+      site ?? {},
+      incrementOptions('extend', opts),
+    );
   }
   if (site) {
     session.log.debug(`Loaded site config from ${file}`);
@@ -200,7 +237,7 @@ function getValidatedConfigsFromFile(
   }
   if (rawProject) {
     project = fillProjectFrontmatter(
-      validateProjectConfigAndThrow(session, path, vfile, rawProject),
+      await validateProjectConfigAndThrow(session, path, vfile, rawProject),
       project ?? {},
       projectOpts,
     );
@@ -219,7 +256,11 @@ function getValidatedConfigsFromFile(
  *
  * Errors if config file does not exist or if config file exists but is invalid.
  */
-export function loadConfig(session: ISession, path: string, opts?: { reloadProject?: boolean }) {
+export async function loadConfig(
+  session: ISession,
+  path: string,
+  opts?: { reloadProject?: boolean },
+) {
   const file = configFromPath(session, path);
   if (!file) {
     session.log.debug(`No config loaded from path: ${path}`);
@@ -232,7 +273,7 @@ export function loadConfig(session: ISession, path: string, opts?: { reloadProje
       return existingConf.validated;
     }
   }
-  const { site, project, extend } = getValidatedConfigsFromFile(session, file);
+  const { site, project, extend } = await getValidatedConfigsFromFile(session, file);
   const validated = { ...rawConf, site, project, extend };
   session.store.dispatch(
     config.actions.receiveRawConfig({
@@ -247,21 +288,40 @@ export function loadConfig(session: ISession, path: string, opts?: { reloadProje
   return validated;
 }
 
-export function resolveToAbsolute(
+export async function resolveToAbsolute(
   session: ISession,
   basePath: string,
   relativePath: string,
-  checkExists = true,
+  opts?: {
+    allowNotExist?: boolean;
+    allowRemote?: boolean;
+  },
 ) {
-  let message: string;
+  let message: string | undefined;
+  if (opts?.allowRemote && isUrl(relativePath)) {
+    const cacheFilename = `config-item-${computeHash(relativePath)}${extname(new URL(relativePath).pathname)}`;
+    if (!loadFromCache(session, cacheFilename, { maxAge: 30 })) {
+      try {
+        const resp = await session.fetch(relativePath);
+        if (resp.ok) {
+          writeToCache(session, cacheFilename, Buffer.from(await resp.arrayBuffer()));
+        } else {
+          message = `Bad response from config URL: ${relativePath}`;
+        }
+      } catch {
+        message = `Error fetching config URL: ${relativePath}`;
+      }
+    }
+    relativePath = cachePath(session, cacheFilename);
+  }
   try {
-    const absPath = resolve(join(basePath, relativePath));
-    if (!checkExists || fs.existsSync(absPath)) {
+    const absPath = resolve(basePath, relativePath);
+    if (opts?.allowNotExist || fs.existsSync(absPath)) {
       return absPath;
     }
-    message = `Does not exist as local path: ${absPath}`;
+    message = message ?? `Does not exist as local path: ${absPath}`;
   } catch {
-    message = `Unable to resolve as local path: ${relativePath}`;
+    message = message ?? `Unable to resolve as local path: ${relativePath}`;
   }
   session.log.debug(message);
   return relativePath;
@@ -271,11 +331,13 @@ function resolveToRelative(
   session: ISession,
   basePath: string,
   absPath: string,
-  checkExists = true,
+  opts?: {
+    allowNotExist?: boolean;
+  },
 ) {
   let message: string;
   try {
-    if (!checkExists || fs.existsSync(absPath)) {
+    if (opts?.allowNotExist || fs.existsSync(absPath)) {
       // If it is the same path, use a '.'
       return relative(basePath, absPath) || '.';
     }
@@ -287,7 +349,7 @@ function resolveToRelative(
   return absPath;
 }
 
-function resolveSiteConfigPaths(
+async function resolveSiteConfigPaths(
   session: ISession,
   path: string,
   siteConfig: SiteConfig,
@@ -295,25 +357,40 @@ function resolveSiteConfigPaths(
     session: ISession,
     basePath: string,
     path: string,
-    checkExists?: boolean,
-  ) => string,
+    opts?: {
+      allowNotExist?: boolean;
+      allowRemote?: boolean;
+    },
+  ) => string | Promise<string>,
+  file: string,
 ) {
   const resolvedFields: SiteConfig = {};
   if (siteConfig.projects) {
-    resolvedFields.projects = siteConfig.projects.map((proj) => {
-      if (proj.path) {
-        return { ...proj, path: resolutionFn(session, path, proj.path) };
-      }
-      return proj;
-    });
+    resolvedFields.projects = await Promise.all(
+      siteConfig.projects.map(async (proj) => {
+        if (proj.path) {
+          return { ...proj, path: await resolutionFn(session, path, proj.path) };
+        }
+        return proj;
+      }),
+    );
   }
   if (siteConfig.favicon) {
-    resolvedFields.favicon = resolutionFn(session, path, siteConfig.favicon);
+    resolvedFields.favicon = await resolutionFn(session, path, siteConfig.favicon);
+  }
+  if (siteConfig.parts) {
+    resolvedFields.parts = await loadFrontmatterParts(
+      session,
+      file,
+      'site.parts',
+      { parts: siteConfig.parts },
+      path,
+    );
   }
   return { ...siteConfig, ...resolvedFields };
 }
 
-function resolveProjectConfigPaths(
+async function resolveProjectConfigPaths(
   session: ISession,
   path: string,
   projectConfig: ProjectConfig,
@@ -321,39 +398,57 @@ function resolveProjectConfigPaths(
     session: ISession,
     basePath: string,
     path: string,
-    checkExists?: boolean,
-  ) => string,
+    opts?: {
+      allowNotExist?: boolean;
+      allowRemote?: boolean;
+    },
+  ) => string | Promise<string>,
+  file: string,
 ) {
   const resolvedFields: ProjectConfig = {};
   if (projectConfig.bibliography) {
-    resolvedFields.bibliography = projectConfig.bibliography.map((file) => {
-      return resolutionFn(session, path, file);
-    });
+    resolvedFields.bibliography = await Promise.all(
+      projectConfig.bibliography.map(async (f) => {
+        const resolved = await resolutionFn(session, path, f);
+        return resolved;
+      }),
+    );
   }
   if (projectConfig.index) {
-    resolvedFields.index = resolutionFn(session, path, projectConfig.index);
-  }
-  if (projectConfig.exclude) {
-    resolvedFields.exclude = projectConfig.exclude.map((file) => {
-      return resolutionFn(session, path, file, false);
-    });
+    resolvedFields.index = await resolutionFn(session, path, projectConfig.index);
   }
   if (projectConfig.plugins) {
-    resolvedFields.plugins = projectConfig.plugins.map((file) => {
-      const resolved = resolutionFn(session, path, file);
-      if (fs.existsSync(resolved)) return resolved;
-      return file;
-    });
+    resolvedFields.plugins = await Promise.all(
+      projectConfig.plugins.map(async (info) => {
+        const resolved = await resolutionFn(session, path, info.path, {
+          allowRemote: info.type !== 'executable',
+        });
+        if (fs.existsSync(resolved)) {
+          return { ...info, path: resolved };
+        } else {
+          return info;
+        }
+      }),
+    );
+  }
+  if (projectConfig.parts) {
+    resolvedFields.parts = await loadFrontmatterParts(
+      session,
+      file,
+      'project.parts',
+      { parts: projectConfig.parts },
+      path,
+    );
   }
   return { ...projectConfig, ...resolvedFields };
 }
 
-function validateSiteConfigAndThrow(
+async function validateSiteConfigAndThrow(
   session: ISession,
   path: string,
   vfile: VFile,
   rawSite: Record<string, any>,
-): SiteConfig {
+): Promise<SiteConfig> {
   const site = validateSiteConfig(
     rawSite,
     configValidationOpts(vfile, 'config.site', RuleId.validSiteConfig),
@@ -363,19 +458,19 @@ function validateSiteConfigAndThrow(
     const errorSuffix = vfile.path ? ` in ${vfile.path}` : '';
     throw Error(`Please address invalid site config${errorSuffix}`);
   }
-  return resolveSiteConfigPaths(session, path, site, resolveToAbsolute);
+  return resolveSiteConfigPaths(session, path, site, resolveToAbsolute, vfile.path);
 }
 
 function saveSiteConfig(session: ISession, path: string, site: SiteConfig) {
   session.store.dispatch(config.actions.receiveSiteConfig({ path, ...site }));
 }
 
-function validateProjectConfigAndThrow(
+async function validateProjectConfigAndThrow(
   session: ISession,
   path: string,
   vfile: VFile,
   rawProject: Record<string, any>,
-): ProjectConfig {
+): Promise<ProjectConfig> {
   const project = validateProjectConfig(
     rawProject,
     configValidationOpts(vfile, 'config.project', RuleId.validProjectConfig),
@@ -385,7 +480,7 @@ function validateProjectConfigAndThrow(
     const errorSuffix = vfile.path ? ` in ${vfile.path}` : '';
     throw Error(`Please address invalid project config${errorSuffix}`);
   }
-  return resolveProjectConfigPaths(session, path, project, resolveToAbsolute);
+  return resolveProjectConfigPaths(session, path, project, resolveToAbsolute, vfile.path);
 }
 
 function saveProjectConfig(session: ISession, path: string, project: ProjectConfig) {
@@ -401,7 +496,7 @@ function saveProjectConfig(session: ISession, path: string, project: ProjectConf
  * If a config file exists on the path, this will override the
  * site portion of the config and leave the rest.
  */
-export function writeConfigs(
+export async function writeConfigs(
   session: ISession,
   path: string,
   newConfigs?: {
@@ -417,24 +512,34 @@ export function writeConfigs(
   const vfile = new VFile();
   vfile.path = file;
   if (siteConfig) {
-    saveSiteConfig(session, path, validateSiteConfigAndThrow(session, path, vfile, siteConfig));
+    saveSiteConfig(
+      session,
+      path,
+      await validateSiteConfigAndThrow(session, path, vfile, siteConfig),
+    );
   }
   siteConfig = selectors.selectLocalSiteConfig(session.store.getState(), path);
   if (siteConfig) {
-    siteConfig = resolveSiteConfigPaths(session, path, siteConfig, resolveToRelative);
+    siteConfig = await resolveSiteConfigPaths(session, path, siteConfig, resolveToRelative, file);
   }
   // Get project config to save
   if (projectConfig) {
     saveProjectConfig(
       session,
       path,
-      validateProjectConfigAndThrow(session, path, vfile, projectConfig),
+      await validateProjectConfigAndThrow(session, path, vfile, projectConfig),
     );
   }
   projectConfig = selectors.selectLocalProjectConfig(session.store.getState(), path);
   if (projectConfig) {
     projectConfig = prepareToWrite(projectConfig);
-    projectConfig = resolveProjectConfigPaths(session, path, projectConfig, resolveToRelative);
+    projectConfig = await resolveProjectConfigPaths(
+      session,
+      path,
+      projectConfig,
+      resolveToRelative,
+      file,
+    );
   }
   // Return early if nothing new to save
   if (!siteConfig && !projectConfig) {
@@ -442,7 +547,7 @@ export function writeConfigs(
     return;
   }
   // Get raw config to override
-  const validatedRawConfig = loadConfig(session, path) ?? emptyConfig();
+  const validatedRawConfig = (await loadConfig(session, path)) ?? emptyConfig();
   let logContent: string;
   if (siteConfig && projectConfig) {
     logContent = 'site and project configs';
@@ -459,10 +564,10 @@ export function writeConfigs(
   writeFileToFolder(file, yaml.dump(newConfig), 'utf-8');
 }
 
-export function findCurrentProjectAndLoad(session: ISession, path: string): string | undefined {
+export async function findCurrentProjectAndLoad(session: ISession, path: string) {
   path = resolve(path);
   if (configFromPath(session, path)) {
-    loadConfig(session, path);
+    await loadConfig(session, path);
     const project = selectors.selectLocalProjectConfig(session.store.getState(), path);
     if (project) {
       session.store.dispatch(config.actions.receiveCurrentProjectPath({ path: path }));
@@ -475,10 +580,10 @@ export function findCurrentProjectAndLoad(session: ISession, path: string): stri
   return findCurrentProjectAndLoad(session, dirname(path));
 }
 
-export function findCurrentSiteAndLoad(session: ISession, path: string): string | undefined {
+export async function findCurrentSiteAndLoad(session: ISession, path: string) {
   path = resolve(path);
   if (configFromPath(session, path)) {
-    loadConfig(session, path);
+    await loadConfig(session, path);
     const site = selectors.selectLocalSiteConfig(session.store.getState(), path);
     if (site) {
       session.store.dispatch(config.actions.receiveCurrentSitePath({ path: path }));
@@ -491,7 +596,7 @@ export function findCurrentSiteAndLoad(session: ISession, path: string): string 
   return findCurrentSiteAndLoad(session, dirname(path));
 }
 
-export function reloadAllConfigsForCurrentSite(session: ISession) {
+export async function reloadAllConfigsForCurrentSite(session: ISession) {
   const state = session.store.getState();
   const sitePath = selectors.selectCurrentSitePath(state);
   const file =
@@ -502,19 +607,21 @@ export function reloadAllConfigsForCurrentSite(session: ISession) {
     addWarningForFile(session, file, message, 'error', { ruleId: RuleId.siteConfigExists });
     throw Error(message);
   }
-  loadConfig(session, sitePath);
+  await loadConfig(session, sitePath);
   const siteConfig = selectors.selectCurrentSiteConfig(session.store.getState());
   if (!siteConfig?.projects) return;
-  siteConfig.projects
-    .filter((project): project is SiteProject & { path: string } => {
-      return Boolean(project.path);
-    })
-    .forEach((project) => {
-      try {
-        loadConfig(session, project.path);
-      } catch (error) {
-        // TODO: what error?
-        session.log.debug(`Failed to find or load project config from "${project.path}"`);
-      }
-    });
+  await Promise.all(
+    siteConfig.projects
+      .filter((project): project is SiteProject & { path: string } => {
+        return Boolean(project.path);
+      })
+      .map(async (project) => {
+        try {
+          await loadConfig(session, project.path);
+        } catch (error) {
+          // TODO: what error?
+          session.log.debug(`Failed to find or load project config from "${project.path}"`);
+        }
+      }),
+  );
 }

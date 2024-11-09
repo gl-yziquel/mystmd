@@ -1,5 +1,7 @@
 import { InvalidArgumentError, Option } from 'commander';
 
+export const MYST_DOI_BIB_FILE = 'myst.doi.bib';
+
 function parseInt(value: any) {
   const parsedValue = Number.parseInt(value, 10);
   if (isNaN(parsedValue)) throw new InvalidArgumentError('Not a number.');
@@ -34,6 +36,10 @@ export function makeMecaOptions(description: string) {
   return new Option('--meca', description).default(false);
 }
 
+export function makeCffOption(description: string) {
+  return new Option('--cff', description).default(false);
+}
+
 export function makeSiteOption(description: string) {
   return new Option('--site', description).default(false);
 }
@@ -56,6 +62,15 @@ export function makeExecuteOption(description: string) {
 
 export function makeAllOption(description: string) {
   return new Option('-a, --all', description).default(false);
+}
+
+export function makeDOIBibOption() {
+  return new Option(
+    '--doi-bib',
+    `Generate (or regenerate) ${MYST_DOI_BIB_FILE} file containing bibtex entries for all remotely loaded DOI citations`,
+  )
+    .default(false)
+    .implies({ writeDOIBib: true });
 }
 
 export function makeWatchOption() {

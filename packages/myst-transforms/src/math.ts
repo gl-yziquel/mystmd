@@ -6,12 +6,13 @@ import type { Math } from 'myst-spec-ext';
 import { selectAll } from 'unist-util-select';
 import type { GenericParent } from 'myst-common';
 import { RuleId, copyNode, fileError, fileWarn, normalizeLabel } from 'myst-common';
+import type { PageFrontmatter } from 'myst-frontmatter';
 import { unnestTransform } from './unnest.js';
 
 const TRANSFORM_NAME = 'myst-transforms:math';
 
 type Options = {
-  macros?: Record<string, string>;
+  macros?: Required<PageFrontmatter>['math'];
   mathML?: boolean;
 };
 
@@ -19,7 +20,7 @@ const replacements = {
   ' ': ' ',
 };
 
-const buildInMacros = {
+const builtInMacros = {
   '\\mbox': '\\text{#1}', // mbox is not supported in KaTeX, this is an OK fallback
 };
 
@@ -42,16 +43,28 @@ function labelMathNodes(file: VFile, node: Math | InlineMath) {
   const label = match[1];
   const normalized = normalizeLabel(label);
   if (node.type === 'math' && normalized) {
-    if (node.enumerated === false) {
-      fileWarn(file, `Labelling an unnumbered math node with "\\label{${label}}"`, {
-        node,
-        source: TRANSFORM_NAME,
-        ruleId: RuleId.mathLabelLifted,
-      });
+    if (node.label) {
+      fileWarn(
+        file,
+        `Math node is already labeled "${node.label}" - ignoring inline "\\label{${label}}"`,
+        {
+          node,
+          source: TRANSFORM_NAME,
+          ruleId: RuleId.mathLabelLifted,
+        },
+      );
+    } else {
+      if (node.enumerated === false) {
+        fileWarn(file, `Labelling an unnumbered math node with "\\label{${label}}"`, {
+          node,
+          source: TRANSFORM_NAME,
+          ruleId: RuleId.mathLabelLifted,
+        });
+      }
+      node.identifier = normalized.identifier;
+      node.label = normalized.label;
+      (node as any).html_id = normalized.html_id;
     }
-    node.identifier = normalized.identifier;
-    node.label = normalized.label;
-    (node as any).html_id = normalized.html_id;
   } else if (node.type === 'inlineMath') {
     fileWarn(file, `Cannot use "\\label{${label}}" in inline math`, {
       node,
@@ -125,11 +138,17 @@ function removeWarnings(result: RenderResult, predicate: (warning: string) => bo
 function tryRender(file: VFile, node: Node, value: string, opts?: Options): RenderResult {
   const displayMode = node.type === 'math';
   const warnings: string[] = [];
+  let simplifiedMacros: Record<string, string> = {};
+  if (opts?.macros) {
+    simplifiedMacros = Object.fromEntries(
+      Object.entries(opts.macros).map(([k, v]) => [k, v.macro]),
+    );
+  }
   try {
     const html = katex.renderToString(value, {
       displayMode,
       output: opts?.mathML ? 'mathml' : undefined,
-      macros: { ...buildInMacros, ...opts?.macros },
+      macros: { ...builtInMacros, ...simplifiedMacros },
       strict: (f: string, m: string) => {
         warnings.push(`${f}, ${m}`);
       },

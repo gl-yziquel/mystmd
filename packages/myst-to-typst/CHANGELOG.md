@@ -1,5 +1,117 @@
 # myst-to-typst
 
+## 0.0.27
+
+### Patch Changes
+
+- f888081: Support card nodes
+- fe236580: Upgrade table functionality in typst
+
+## 0.0.26
+
+### Patch Changes
+
+- eb411d0b: Allow for iframe to have a placeholder
+- 6ded5d1: Update deps
+- fd78758e: Tabs in typst
+- f7e83852: add proof and change blockquote
+- dd4569b9: Add captions for sub figures
+- Updated dependencies [eb411d0b]
+  - myst-spec-ext@1.7.4
+  - myst-common@1.7.4
+  - myst-frontmatter@1.7.4
+
+## 0.0.25
+
+### Patch Changes
+
+- 7547b1dd: Typst program vs code.
+- Updated dependencies [2bce565]
+  - myst-common@1.7.3
+  - myst-frontmatter@1.7.3
+  - myst-spec-ext@1.7.3
+
+## 0.0.24
+
+### Patch Changes
+
+- ce3c11c: Update inter-version deps
+
+## 0.0.23
+
+### Patch Changes
+
+- 53fcd2ba: Replace remote cross references with links in typst
+- Updated dependencies [3c65de0]
+- Updated dependencies [64a33837]
+- Updated dependencies [3c65de0]
+  - myst-frontmatter@1.7.1
+  - myst-common@1.7.1
+  - myst-spec-ext@1.7.1
+
+## 0.0.22
+
+### Patch Changes
+
+- a550afdc: Allow for styles in tables
+- Updated dependencies [5f8f0b0d]
+  - myst-spec-ext@1.7.0
+  - myst-common@1.7.0
+  - myst-frontmatter@1.7.0
+
+## 0.0.21
+
+### Patch Changes
+
+- 857c5acf: Add raw directives/roles for inserting tex/typst-specific content
+- Updated dependencies [857c5acf]
+- Updated dependencies [313b218]
+  - myst-spec-ext@1.5.3
+  - myst-frontmatter@1.5.3
+  - myst-common@1.5.3
+
+## 0.0.20
+
+### Patch Changes
+
+- 706d01e8: Updates for typst math subscripts
+- 8b75342d: Fix handling of remove- for exports
+
+## 0.0.19
+
+### Patch Changes
+
+- 0b3bf03: Fix labels, add macros for typst math
+- 0b3bf03: Support subfigures in typst export
+- Updated dependencies [134598fd]
+- Updated dependencies [38a45645]
+- Updated dependencies [3fd53be8]
+  - myst-common@1.5.2
+  - myst-frontmatter@1.5.2
+  - myst-spec-ext@1.5.2
+
+## 0.0.18
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - myst-frontmatter@1.5.1
+  - myst-spec-ext@1.5.1
+  - myst-common@1.5.1
+
+## 0.0.17
+
+### Patch Changes
+
+- 65ade89: Consume new math structure
+- 65ade89: Resolve recursive macros early for typst
+- Updated dependencies [65ade89]
+- Updated dependencies [435c4329]
+  - myst-frontmatter@1.4.4
+  - myst-common@1.4.4
+  - myst-spec-ext@1.4.4
+
 ## 0.0.16
 
 ### Patch Changes

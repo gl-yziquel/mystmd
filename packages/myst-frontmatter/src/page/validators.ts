@@ -2,14 +2,13 @@ import type { ValidationOptions } from 'simple-validators';
 import {
   defined,
   incrementOptions,
-  validateList,
   validateObjectKeys,
   validateString,
-  validationError,
   validateBoolean,
+  validateObject,
 } from 'simple-validators';
 import { validateProjectAndPageFrontmatterKeys } from '../project/validators.js';
-import { PAGE_FRONTMATTER_KEYS, PAGE_KNOWN_PARTS, type PageFrontmatter } from './types.js';
+import { PAGE_FRONTMATTER_KEYS, type PageFrontmatter } from './types.js';
 import { validateKernelSpec } from '../kernelspec/validators.js';
 import { validateJupytext } from '../jupytext/validators.js';
 import { FRONTMATTER_ALIASES } from '../site/types.js';
@@ -21,6 +20,8 @@ export const USE_PROJECT_FALLBACK = [
   'date',
   'doi',
   'arxiv',
+  'pmid',
+  'pmcid',
   'open_access',
   'license',
   'github',
@@ -28,7 +29,10 @@ export const USE_PROJECT_FALLBACK = [
   'source',
   'subject',
   'venue',
-  'biblio',
+  'volume',
+  'issue',
+  'first_page',
+  'last_page',
   'numbering',
   'keywords',
   'funding',
@@ -47,54 +51,16 @@ export function validatePageFrontmatterKeys(value: Record<string, any>, opts: Va
   if (defined(value.jupytext)) {
     output.jupytext = validateJupytext(value.jupytext, incrementOptions('jupytext', opts));
   }
-  if (defined(value.tags)) {
-    output.tags = validateList(
-      value.tags,
-      incrementOptions('tags', opts),
-      (file, index: number) => {
-        return validateString(file, incrementOptions(`tags.${index}`, opts));
-      },
-    );
-  }
-  const partsOptions = incrementOptions('parts', opts);
-  let parts: Record<string, any> | undefined;
-  if (defined(value.parts)) {
-    parts = validateObjectKeys(
-      value.parts,
-      { optional: PAGE_KNOWN_PARTS, alias: FRONTMATTER_ALIASES },
-      { keepExtraKeys: true, suppressWarnings: true, ...partsOptions },
-    );
-  }
-  PAGE_KNOWN_PARTS.forEach((partKey) => {
-    if (defined(value[partKey])) {
-      parts ??= {};
-      if (parts[partKey]) {
-        validationError(`duplicate value for part ${partKey}`, partsOptions);
-      } else {
-        parts[partKey] = value[partKey];
-      }
-    }
-  });
-  if (parts) {
-    const partsEntries = Object.entries(parts)
-      .map(([k, v]) => {
-        return [
-          k,
-          validateList(v, { coerce: true, ...incrementOptions(k, partsOptions) }, (item, index) => {
-            return validateString(item, incrementOptions(`${k}.${index}`, partsOptions));
-          }),
-        ];
-      })
-      .filter((entry): entry is [string, string[]] => !!entry[1]?.length);
-    if (partsEntries.length > 0) {
-      output.parts = Object.fromEntries(partsEntries);
-    }
-  }
   if (defined(value.content_includes_title)) {
     output.content_includes_title = validateBoolean(
       value.content_includes_title,
       incrementOptions('content_includes_title', opts),
     );
+  }
+  if (defined(value.site)) {
+    // These are validated later based on the siteTemplate
+    // At this point, they just need to be an object
+    output.site = validateObject(value.site, incrementOptions('site', opts));
   }
   return output;
 }

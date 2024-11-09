@@ -58,9 +58,9 @@ Cross-referencing content is accomplished with markdown link syntax (`[text](#ta
 * - `[](./citations.md)`
     : Link to documents using relative links from the markdown.
   - [](./citations.md)
-* - `[](./_toc.yml)`
+* - `[](./myst.yml)`
     : Link to static files that will be included in your built website. Similar to the [{download}](#download-role) role.
-  - [](./_toc.yml)
+  - [](./myst.yml)
 * - `[Admonition](xref:spec#admonition)`
     : External hover-references to MyST or Sphinx projects. See [](./external-references.md).
   - [Admonition](xref:spec#admonition)
@@ -154,12 +154,16 @@ For example, in this reference syntax:
 The text `my-targets-label` is the label for the target.
 There are many ways that you can label a target, and the sections below describe the most common approaches.
 
+:::{note}
+To be referenced, targets must have a `label`/`identifier` pair [in the AST](xref:spec#association).
+:::
+
 ### Directive Targets
 
-Targets are custom anchors that you can refer to elsewhere, for example, a figure, section, table, program, or proof. To be referenced, they must have a `label`/`identifier` pair [in the AST](xref:spec#association). These can be created by setting the `label` option in many directives. For example, to label and reference a figure, use the following syntax:
+Labels can be given to most directives by setting the `label` option. For example, to label and reference a figure, use the following syntax:
 
 ````{myst}
-```{figure} https://source.unsplash.com/random/500x200/?mountain
+```{figure} https://github.com/rowanc1/pics/blob/main/mountains.png?raw=true
 :label: my-fig
 :align: center
 
@@ -170,8 +174,21 @@ Check out [](#my-fig)!!
 ````
 
 ```{tip} Using Markdown Links 🔗
-You can use this syntax to also reference [Section/Header targets](#targeting-headers) as well as [label equations](#targeting-equations) when using [dollar math](#dollar-math) or [AMS math](#ams-environments).
+You can use this syntax to also reference [Section/Header targets](#targeting-headers) as well as [label equations](#referencing-equations) when using [dollar math](#dollar-math) or [AMS math](#ams-environments).
 ```
+
+Or, to label an equation:
+
+(example-equation-targets)=
+
+````{myst}
+```{math}
+:label: my-math-label
+e=mc^2
+```
+
+See [](#my-math-label) for an equation!
+````
 
 (targeting-headers)=
 
@@ -234,26 +251,6 @@ numbering:
 * [](#my-section)
 * [](#my-section2)
 ```
-
-(targeting-equations)=
-
-### Equations Targets
-
-To reference equations, use the {myst:role}`eq` role. It will automatically insert the number of the equation. Note that you cannot modify the text of equation links.
-
-(example-equation-targets)=
-
-````{myst}
-```{math}
-:label: my-math-label
-e=mc^2
-```
-
-See [](#my-math-label) for an equation!
-````
-
-% Internal/external links
-% Checking for missing references, link to another place.
 
 (targeting-cells)=
 
@@ -318,8 +315,7 @@ Please see [this paragraph](#my-paragraph) and [these points](#my-points).
 
 ## Numbering
 
-Frontmatter may specify `numbering` to customize how various components of the page are numbered. By default, numbering is enabled for figures, equations, tables, and code blocks; it is disabled for headings and other content types contained on the page.
-
+Frontmatter may specify `numbering` to customize how various components of the page are numbered. By default, numbering is enabled for figures, equations, tables, math, and code blocks; it is disabled for headings and other content types contained on the page.
 To enable numbering of all content, you may simply use:
 
 ```yaml
@@ -337,6 +333,7 @@ The `numbering` object allows you to be much more granular with enabling and dis
 ```yaml
 numbering:
   code: false
+  math: false
   headings: true
 ```
 
@@ -374,3 +371,5 @@ Finally, under the `numbering` object, you may specify `enumerator`. For now, th
 numbering:
   enumerator: A1.%s
 ```
+
+If you want to control the numbering for a specific figure, you can use the {myst:directive}`figure.enumerator` option. This will give the figure a specific enumerator, and will not increment the counting for other figures. This is helpful if you want to explicitly count figure `2a` and then carry on counting figures as normal; alternatively you can take control of numbering entirely by setting {myst:directive}`figure.enumerator` on every figure.

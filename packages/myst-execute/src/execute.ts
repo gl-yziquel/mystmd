@@ -1,11 +1,11 @@
 import { select, selectAll } from 'unist-util-select';
 import type { Logger } from 'myst-cli-utils';
-import type { PageFrontmatter } from 'myst-frontmatter';
+import type { PageFrontmatter, KernelSpec } from 'myst-frontmatter';
 import type { Kernel, KernelMessage, Session, SessionManager } from '@jupyterlab/services';
-import type { Code, InlineExpression } from 'myst-spec-ext';
+import type { Block, Code, InlineExpression, Output } from 'myst-spec-ext';
 import type { IOutput } from '@jupyterlab/nbformat';
-import type { GenericNode, GenericParent, IExpressionResult } from 'myst-common';
-import { NotebookCell, fileError, fileWarn } from 'myst-common';
+import type { GenericNode, GenericParent, IExpressionResult, IExpressionError } from 'myst-common';
+import { NotebookCell, fileError } from 'myst-common';
 import type { VFile } from 'vfile';
 import path from 'node:path';
 import assert from 'node:assert';
@@ -106,7 +106,7 @@ async function evaluateExpression(kernel: Kernel.IKernelConnection, expr: string
  *
  * @param nodes array of executable nodes
  */
-function buildCacheKey(nodes: (ICellBlock | InlineExpression)[]): string {
+function buildCacheKey(kernelSpec: KernelSpec, nodes: (CodeBlock | InlineExpression)[]): string {
   // Build an array of hashable items from an array of nodes
   const hashableItems: {
     kind: string;
@@ -118,7 +118,7 @@ function buildCacheKey(nodes: (ICellBlock | InlineExpression)[]): string {
       hashableItems.push({
         kind: node.type,
         content: (select('code', node) as Code).value,
-        raisesException: !!node.data?.tags?.['raises-exception'],
+        raisesException: codeBlockRaisesException(node),
       });
     } else {
       assert(isInlineExpression(node));
@@ -129,17 +129,35 @@ function buildCacheKey(nodes: (ICellBlock | InlineExpression)[]): string {
       });
     }
   }
-  // Serialize the array into JSON, and compute the hash
-  const hashableString = JSON.stringify(hashableItems);
-  return createHash('md5').update(hashableString).digest('hex');
+
+  // Build a hash from notebook state
+  return createHash('md5')
+    .update(kernelSpec.name)
+    .update(JSON.stringify(hashableItems))
+    .digest('hex');
 }
 
-type ICellBlockOutput = GenericNode & {
+/**
+ * Type narrowing Output to contain IOutput data
+ *
+ * TODO: lift this to the myst-spec definition
+ */
+type CodeBlockOutput = Output & {
   data: IOutput[];
 };
 
-type ICellBlock = GenericNode & {
-  children: (Code | ICellBlockOutput)[];
+/**
+ * Type narrowing Block to contain code-cells and code-cell outputs
+ *
+ * TODO: lift this to the myst-spec definition
+ */
+
+type CodeBlock = Block & {
+  kind: 'code';
+  data?: {
+    tags?: string[];
+  };
+  children: (Code | CodeBlockOutput)[];
 };
 
 /**
@@ -147,8 +165,25 @@ type ICellBlock = GenericNode & {
  *
  * @param node node to test
  */
-function isCellBlock(node: GenericNode): node is ICellBlock {
+function isCellBlock(node: GenericNode): node is CodeBlock {
   return node.type === 'block' && select('code', node) !== null && select('output', node) !== null;
+}
+
+/**
+ * Return true if the given code block is expected to raise an exception
+ *
+ * @param node block to test
+ */
+function codeBlockRaisesException(node: CodeBlock) {
+  return !!node.data?.tags?.includes?.('raises-exception');
+}
+/**
+ * Return true if the given code block should not be executed
+ *
+ * @param node block to test
+ */
+function codeBlockSkipsExecution(node: CodeBlock) {
+  return !!node.data?.tags?.includes?.('skip-execution');
 }
 
 /**
@@ -170,7 +205,7 @@ function isInlineExpression(node: GenericNode): node is InlineExpression {
  */
 async function computeExecutableNodes(
   kernel: Kernel.IKernelConnection,
-  nodes: (ICellBlock | InlineExpression)[],
+  nodes: (CodeBlock | InlineExpression)[],
   opts: { vfile: VFile },
 ): Promise<{
   results: (IOutput[] | IExpressionResult)[];
@@ -188,12 +223,15 @@ async function computeExecutableNodes(
       results.push(outputs);
 
       // Check for errors
-      const metadata = matchedNode.data || {};
-      const allowErrors = !!metadata?.tags?.['raises-exception'];
+      const allowErrors = codeBlockRaisesException(matchedNode);
       if (status === 'error' && !allowErrors) {
-        fileWarn(
+        const errorMessage = outputs
+          .map((item) => item.traceback)
+          .flat()
+          .join('\n');
+        fileError(
           opts.vfile,
-          'An exception occurred during code execution, halting further execution',
+          `An exception occurred during code execution, halting further execution:\n\n${errorMessage}`,
           {
             node: matchedNode,
           },
@@ -208,9 +246,10 @@ async function computeExecutableNodes(
 
       // Check for errors
       if (status === 'error') {
-        fileWarn(
+        const errorMessage = (result as IExpressionError).traceback.join('\n');
+        fileError(
           opts.vfile,
-          'An exception occurred during expression evaluation, halting further execution',
+          `An exception occurred during expression evaluation, halting further execution:\n\n${errorMessage}`,
           { node: matchedNode },
         );
         // Make a note of the failure
@@ -235,7 +274,7 @@ async function computeExecutableNodes(
  * @param computedResult computed results for each node
  */
 function applyComputedOutputsToNodes(
-  nodes: (ICellBlock | InlineExpression)[],
+  nodes: (CodeBlock | InlineExpression)[],
   computedResult: (IOutput[] | IExpressionResult)[],
 ) {
   for (const matchedNode of nodes) {
@@ -277,19 +316,32 @@ export type Options = {
  */
 export async function kernelExecutionTransform(tree: GenericParent, vfile: VFile, opts: Options) {
   const log = opts.log ?? console;
+
   // Pull out code-like nodes
-  const executableNodes = selectAll(`block[kind=${NotebookCell.code}],inlineExpression`, tree) as (
-    | ICellBlock
-    | InlineExpression
-  )[];
+  const executableNodes = (
+    selectAll(`block[kind=${NotebookCell.code}],inlineExpression`, tree) as (
+      | CodeBlock
+      | InlineExpression
+    )[]
+  )
+    // Filter out nodes that skip execution
+    .filter((node) => !(isCellBlock(node) && codeBlockSkipsExecution(node)));
 
   // Only do something if we have any nodes!
   if (executableNodes.length === 0) {
     return;
   }
 
+  // We need the kernelspec to proceed
+  if (opts.frontmatter.kernelspec === undefined) {
+    return fileError(
+      vfile,
+      `Notebook does not declare the necessary 'kernelspec' frontmatter key required for execution`,
+    );
+  }
+
   // See if we already cached this execution
-  const cacheKey = buildCacheKey(executableNodes);
+  const cacheKey = buildCacheKey(opts.frontmatter.kernelspec, executableNodes);
   let cachedResults: (IExpressionResult | IOutput[])[] | undefined = opts.cache.get(cacheKey);
 
   // Do we need to re-execute notebook?
@@ -314,7 +366,7 @@ export async function kernelExecutionTransform(tree: GenericParent, vfile: VFile
         type: 'notebook',
         name: path.basename(vfile.path),
         kernel: {
-          name: opts.frontmatter?.kernelspec?.name ?? 'python3',
+          name: opts.frontmatter.kernelspec.name,
         },
       };
       await sessionManager
@@ -337,11 +389,6 @@ export async function kernelExecutionTransform(tree: GenericParent, vfile: VFile
           // Populate cache if things were successful
           if (!errorOccurred) {
             opts.cache.set(cacheKey, results);
-          } else {
-            // Otherwise, keep tabs on the error
-            fileError(vfile, 'An error occurred during kernel execution', {
-              fatal: opts.errorIsFatal,
-            });
           }
           // Refer to these computed results
           cachedResults = results;

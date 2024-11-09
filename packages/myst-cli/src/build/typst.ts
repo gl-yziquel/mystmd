@@ -32,6 +32,7 @@ import { logMessagesFromVFile } from '../utils/logging.js';
 import { getFileContent } from './utils/getFileContent.js';
 import { addWarningForFile } from '../utils/addWarningForFile.js';
 import { createTempFolder } from '../utils/createTempFolder.js';
+import { resolveFrontmatterParts } from '../utils/resolveFrontmatterParts.js';
 import version from '../version.js';
 import { cleanOutput } from './utils/cleanOutput.js';
 import type { ExportWithOutput, ExportResults, ExportFnOptions } from './types.js';
@@ -90,7 +91,9 @@ export function extractTypstPart(
   frontmatter: PageFrontmatter,
   templateYml: TemplateYml,
 ): TypstResult | TypstResult[] | undefined {
-  const part = extractPart(mdast, partDefinition.id);
+  const part = extractPart(mdast, partDefinition.id, {
+    frontmatterParts: resolveFrontmatterParts(session, frontmatter),
+  });
   if (!part) return undefined;
   if (!partDefinition.as_list) {
     // Do not build glossaries when extracting parts: references cannot be mapped to definitions
@@ -146,7 +149,7 @@ export async function localArticleToTypstRaw(
   opts?: ExportFnOptions,
 ): Promise<ExportResults> {
   const { articles, output } = templateOptions;
-  const { projectPath, extraLinkTransformers } = opts ?? {};
+  const { projectPath, extraLinkTransformers, execute } = opts ?? {};
   const fileArticles = articlesWithFile(articles);
   const content = await getFileContent(
     session,
@@ -159,6 +162,7 @@ export async function localArticleToTypstRaw(
       preFrontmatters: fileArticles.map((article) =>
         filterKeys(article, [...PAGE_FRONTMATTER_KEYS, ...Object.keys(FRONTMATTER_ALIASES)]),
       ),
+      execute,
     },
   );
 
@@ -181,7 +185,10 @@ export async function localArticleToTypstRaw(
     const { dir, name, ext } = path.parse(output);
     let includeContent = '';
     let fileInd = 0;
+    let addPageBreak = false;
     articles.forEach((article) => {
+      if (addPageBreak) includeContent += '#pagebreak()\n\n';
+      addPageBreak = false;
       if (article.file) {
         const base = `${name}-${content[fileInd]?.slug ?? fileInd}${ext}`;
         const includeFile = path.format({ dir, ext, base });
@@ -193,12 +200,14 @@ export async function localArticleToTypstRaw(
         writeFileToFolder(includeFile, `${part}${results[fileInd].value}`);
         includeContent += `#include "${base}"\n\n`;
         fileInd++;
+        addPageBreak = true;
       } else if (article.title) {
         includeContent += `${titleToTypstHeading(session, article.title, article.level)}\n\n`;
       }
     });
     writeFileToFolder(output, includeContent);
   }
+  await runTypstExecutable(session, output);
   // TODO: add imports and macros?
   return { tempFolders: [] };
 }
@@ -210,7 +219,7 @@ export async function localArticleToTypstTemplated(
   opts?: ExportFnOptions,
 ): Promise<ExportResults> {
   const { output, articles, template } = templateOptions;
-  const { projectPath, extraLinkTransformers, clean, ci } = opts ?? {};
+  const { projectPath, extraLinkTransformers, clean, ci, execute } = opts ?? {};
   const filesPath = path.join(path.dirname(output), 'files');
   const fileArticles = articlesWithFile(articles);
   const content = await getFileContent(
@@ -224,6 +233,7 @@ export async function localArticleToTypstTemplated(
       preFrontmatters: fileArticles.map((article) =>
         filterKeys(article, [...PAGE_FRONTMATTER_KEYS, ...Object.keys(FRONTMATTER_ALIASES)]),
       ),
+      execute,
     },
   );
   const bibtexWritten = writeBibtexFromCitationRenderers(
@@ -306,7 +316,10 @@ export async function localArticleToTypstTemplated(
     const { dir, name, ext } = path.parse(output);
     typstContent = '';
     let fileInd = 0;
+    let addPageBreak = false;
     articles.forEach((article) => {
+      if (addPageBreak) typstContent += '#pagebreak()\n\n';
+      addPageBreak = false;
       if (article.file) {
         const base = `${name}-${content[fileInd]?.slug ?? fileInd}${ext}`;
         const includeFile = path.format({ dir, ext, base });
@@ -322,6 +335,7 @@ export async function localArticleToTypstTemplated(
         );
         typstContent += `#include "${base}"\n\n`;
         fileInd++;
+        addPageBreak = true;
       } else if (article.title) {
         typstContent += `${titleToTypstHeading(session, article.title, article.level)}\n\n`;
       }

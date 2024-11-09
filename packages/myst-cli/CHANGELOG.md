@@ -1,5 +1,458 @@
 # myst-cli
 
+## 1.3.17
+
+### Patch Changes
+
+- f888081: Add page breaks to multipage typst export
+- Updated dependencies [f888081]
+- Updated dependencies [fe236580]
+- Updated dependencies [f888081]
+  - myst-to-typst@0.0.27
+  - tex-to-myst@1.0.40
+  - myst-to-tex@1.0.40
+
+## 1.3.16
+
+### Patch Changes
+
+- Updated dependencies [eb411d0b]
+- Updated dependencies [3ce5404c]
+- Updated dependencies [6ded5d1]
+- Updated dependencies [fd78758e]
+- Updated dependencies [f7e83852]
+- Updated dependencies [dd4569b9]
+  - myst-spec-ext@1.7.4
+  - myst-to-typst@0.0.26
+  - tex-to-myst@1.0.39
+  - myst-common@1.7.4
+  - myst-config@1.7.4
+  - myst-frontmatter@1.7.4
+  - myst-to-tex@1.0.39
+  - myst-parser@1.5.8
+  - myst-transforms@1.3.27
+
+## 1.3.15
+
+### Patch Changes
+
+- 02a8c3a9: Add webp-->png conversion
+- 2bce565: Add site option to include folder structure in url paths
+- Updated dependencies [2bce565]
+- Updated dependencies [b9de3469]
+- Updated dependencies [7547b1dd]
+  - myst-common@1.7.3
+  - jtex@1.0.20
+  - myst-to-typst@0.0.25
+  - myst-config@1.7.3
+  - myst-frontmatter@1.7.3
+  - myst-spec-ext@1.7.3
+
+## 1.3.14
+
+### Patch Changes
+
+- Updated dependencies [ce3c11c]
+  - myst-ext-exercise@1.0.8
+  - myst-ext-reactive@1.0.9
+  - myst-transforms@1.3.26
+  - myst-ext-proof@1.0.11
+  - myst-templates@1.0.23
+  - myst-ext-card@1.0.9
+  - myst-ext-grid@1.0.8
+  - myst-ext-icon@0.0.2
+  - myst-ext-tabs@1.0.8
+  - myst-to-typst@0.0.24
+  - myst-execute@0.1.1
+  - myst-to-docx@1.0.12
+  - myst-to-jats@1.0.30
+  - myst-parser@1.5.7
+  - myst-to-tex@1.0.38
+  - tex-to-myst@1.0.38
+  - myst-to-md@1.0.14
+  - jtex@1.0.19
+
+## 1.3.13
+
+### Patch Changes
+
+- 4a3ee6db: Consume frontmatter parts in static exports
+- 91b85911: Bump action versions.
+- 40ea2dd1: Fix favicon writing
+- 4a3ee6db: Load frontmatter parts as separate files for processing
+- b14e0fb3: Force exit when the task is complete.
+- 4a3ee6db: Fix local image paths for embedded nodes
+- 4a3ee6db: Keep track of implicit vs. explicit pages in project TOC
+- 4a3ee6db: Support parts in site config
+- 4a3ee6db: Parse project-level parts to mdast
+- 4a3ee6db: Update processing to handle parts files
+- Updated dependencies [4a3ee6db]
+- Updated dependencies [897136f]
+- Updated dependencies [4a3ee6db]
+- Updated dependencies [918223b8]
+- Updated dependencies [b14e0fb3]
+- Updated dependencies [4a3ee6db]
+- Updated dependencies [4a3ee6db]
+- Updated dependencies [4a3ee6db]
+  - myst-to-jats@1.0.29
+  - myst-common@1.7.2
+  - myst-frontmatter@1.7.2
+  - myst-cli-utils@2.0.11
+  - myst-spec-ext@1.7.2
+  - myst-config@1.7.2
+
+## 1.3.12
+
+### Patch Changes
+
+- 64a33837: Consume new license simplification function
+- 3c65de0: Deprecate biblio in favor of complete volume/issue objects
+- Updated dependencies [53fcd2ba]
+- Updated dependencies [64a33837]
+- Updated dependencies [3c65de0]
+- Updated dependencies [64a33837]
+- Updated dependencies [3c65de0]
+  - myst-to-typst@0.0.23
+  - myst-to-md@1.0.13
+  - myst-frontmatter@1.7.1
+  - myst-to-jats@1.0.28
+  - myst-common@1.7.1
+  - myst-config@1.7.1
+  - myst-spec-ext@1.7.1
+
+## 1.3.11
+
+### Patch Changes
+
+- fd4a7c3: Protect against circular references in logs
+- c02b1dcd: Update unist-util-visit deps
+
+## 1.3.10
+
+### Patch Changes
+
+- 5f8f0b0d: Add support for seach index generation
+- 9f50eb8: 💦 building widget state
+- Updated dependencies [5f8f0b0d]
+- Updated dependencies [a550afdc]
+- Updated dependencies [d0532699]
+  - myst-spec-ext@1.7.0
+  - myst-to-typst@0.0.22
+  - citation-js-utils@1.2.6
+  - myst-common@1.7.0
+  - myst-config@1.7.0
+  - myst-frontmatter@1.7.0
+
+## 1.3.9
+
+### Patch Changes
+
+- 760e411: Enable site options on each page
+- Updated dependencies [594a0f87]
+- Updated dependencies [e3c3efa7]
+- Updated dependencies [a2519bb3]
+- Updated dependencies [5d5c2893]
+- Updated dependencies [760e411]
+- Updated dependencies [adb3c75a]
+  - myst-to-tex@1.0.37
+  - tex-to-myst@1.0.37
+  - myst-execute@0.1.0
+  - myst-frontmatter@1.6.1
+  - myst-common@1.6.1
+  - myst-config@1.6.1
+  - myst-spec-ext@1.6.1
+
+## 1.3.8
+
+### Patch Changes
+
+- Updated dependencies [822fd2d5]
+- Updated dependencies [c758f1b5]
+- Updated dependencies [0a516e5]
+- Updated dependencies [41d8f35e]
+  - myst-to-tex@1.0.36
+  - myst-ext-reactive@1.0.8
+  - myst-ext-card@1.0.8
+  - myst-parser@1.5.6
+  - myst-execute@0.0.9
+  - tex-to-myst@1.0.36
+  - myst-transforms@1.3.25
+
+## 1.3.7
+
+## 1.3.6
+
+### Patch Changes
+
+- 0812009a: Fix TOC upgrade
+- 9864473: Quiet webp warnings to debug
+- 8ba7b73a: Add `ValidatedMystPlugin` to make types more strict
+- Updated dependencies [9c28805a]
+- Updated dependencies [85db77c7]
+- Updated dependencies [9c1b8c73]
+- Updated dependencies [8ba7b73a]
+  - myst-ext-icon@0.0.1
+  - myst-spec-ext@1.6.0
+  - myst-frontmatter@1.6.0
+  - myst-common@1.6.0
+  - myst-config@1.6.0
+  - myst-parser@1.5.5
+  - myst-transforms@1.3.24
+
+## 1.3.5
+
+### Patch Changes
+
+- 75b07331: Favicon is written as text rather than binary
+- 64e11918: Suppress punycode deprecation warning
+- fab598e9: Fix slug generation for JSON paths
+- c0918b5f: Only write gitignore if it is not already ignored
+- Updated dependencies [60fc2574]
+- Updated dependencies [d1d3cda9]
+- Updated dependencies [85520edd]
+- Updated dependencies [da224b78]
+- Updated dependencies [88396dd]
+- Updated dependencies [5ac2d0bc]
+- Updated dependencies [4e880f3e]
+- Updated dependencies [0625105e]
+- Updated dependencies [e2b74f4d]
+- Updated dependencies [1a5f3f33]
+- Updated dependencies [85520edd]
+  - myst-transforms@1.3.23
+  - myst-frontmatter@1.5.4
+  - simple-validators@1.1.0
+  - myst-parser@1.5.4
+  - myst-spec-ext@1.5.4
+  - tex-to-myst@1.0.35
+  - myst-common@1.5.4
+  - myst-config@1.5.4
+  - myst-to-tex@1.0.35
+
+## 1.3.4
+
+### Patch Changes
+
+- 857c5acf: Add raw directives/roles for inserting tex/typst-specific content
+- Updated dependencies [313b218]
+- Updated dependencies [857c5acf]
+- Updated dependencies [313b218]
+  - myst-templates@1.0.22
+  - myst-spec-ext@1.5.3
+  - myst-to-typst@0.0.21
+  - myst-to-tex@1.0.34
+  - myst-frontmatter@1.5.3
+  - myst-common@1.5.3
+  - myst-config@1.5.3
+  - tex-to-myst@1.0.34
+  - myst-parser@1.5.3
+  - myst-transforms@1.3.22
+
+## 1.3.3
+
+### Patch Changes
+
+- 8b75342d: Fix handling of remove- for exports
+- Updated dependencies [05b5e40e]
+- Updated dependencies [706d01e8]
+- Updated dependencies [8b75342d]
+  - citation-js-utils@1.2.5
+  - myst-to-typst@0.0.20
+  - myst-to-tex@1.0.33
+  - tex-to-myst@1.0.33
+
+## 1.3.2
+
+### Patch Changes
+
+- 0f78ea1d: Prevent crash on non-list tags for code-cell
+- ee0378e3: Change pattern expansion to a flat list of files
+- 999d34a1: Fix execution for non-site builds
+- 134598fd: Add index directives/roles to myst-cli
+- 38a45645: Add CITATION.cff build target
+- 3fd53be8: Add better validation and post-processing to JSON files
+- Updated dependencies [0b3bf03]
+- Updated dependencies [0b3bf03]
+- Updated dependencies [134598fd]
+- Updated dependencies [1ac4d7a6]
+- Updated dependencies [0b3bf03]
+- Updated dependencies [134598fd]
+- Updated dependencies [38a45645]
+- Updated dependencies [3fd53be8]
+  - myst-to-typst@0.0.19
+  - myst-to-tex@1.0.32
+  - citation-js-utils@1.2.4
+  - myst-templates@1.0.21
+  - myst-transforms@1.3.21
+  - myst-common@1.5.2
+  - myst-frontmatter@1.5.2
+  - myst-config@1.5.2
+  - myst-spec-ext@1.5.2
+  - tex-to-myst@1.0.32
+  - myst-parser@1.5.2
+
+## 1.3.1
+
+### Patch Changes
+
+- 752ebcf: Fall back to 'convert' command for imagemagick
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - citation-js-utils@1.2.3
+  - myst-ext-exercise@1.0.7
+  - myst-ext-reactive@1.0.7
+  - simple-validators@1.0.6
+  - myst-frontmatter@1.5.1
+  - myst-transforms@1.3.20
+  - myst-cli-utils@2.0.10
+  - myst-ext-proof@1.0.10
+  - myst-templates@1.0.20
+  - myst-ext-card@1.0.7
+  - myst-ext-grid@1.0.7
+  - myst-ext-tabs@1.0.7
+  - myst-spec-ext@1.5.1
+  - myst-to-typst@0.0.18
+  - myst-execute@0.0.8
+  - myst-to-docx@1.0.11
+  - myst-to-jats@1.0.27
+  - myst-common@1.5.1
+  - myst-config@1.5.1
+  - myst-parser@1.5.1
+  - myst-to-tex@1.0.31
+  - tex-to-myst@1.0.31
+  - myst-to-md@1.0.12
+  - myst-toc@0.1.2
+  - jtex@1.0.18
+
+## 1.3.0
+
+### Minor Changes
+
+- 4f51370f: Add Jupyter Book upgrade feature
+- 0576d5ad: Add support for executable (IPC) plugins
+
+### Patch Changes
+
+- 0576d5ad: Add support for whitelabelling
+- 0576d5ad: Add support for .myst.json files
+- 167238b6: Support multiple articles with meca like jats
+- e4698ac3: Use 'magick' command instead of 'convert' for imagemagick
+- 004f1e28: Do not warn on uppercase image extensions
+- Updated dependencies [8e486e56]
+- Updated dependencies [8c487991]
+- Updated dependencies [28642fe]
+- Updated dependencies [661039d4]
+- Updated dependencies [19e96e27]
+- Updated dependencies [f6aa726c]
+- Updated dependencies [1239104c]
+- Updated dependencies [372de44c]
+- Updated dependencies [0576d5ad]
+- Updated dependencies [478c4d4f]
+- Updated dependencies [848b6d8b]
+  - myst-parser@1.5.0
+  - myst-frontmatter@1.5.0
+  - myst-execute@0.0.7
+  - myst-transforms@1.3.19
+  - myst-common@1.5.0
+  - myst-config@1.5.0
+  - myst-spec-ext@1.5.0
+
+## 1.2.9
+
+### Patch Changes
+
+- 410d8006: Remove doi requests to handle.net
+- 6326cf59: Optimize project thumbnail/banner and fallback correctly
+- 19d8ef14: Include ipynb metadata in frontmatter
+- 603019b: Fix exclude glob/path resolution
+- ef6b23bc: Share doi request limiter across session
+- fc79fb1e: Prevent generation of random temp*id*\* citation labels
+- a00b7f79: Add gitignore support to myst init
+- a8a745b3: Update the myst init default template
+- Updated dependencies [fc79fb1e]
+- Updated dependencies [8fb32d3a]
+- Updated dependencies [fc79fb1e]
+- Updated dependencies [1e2092dc]
+- Updated dependencies [2a8fe63f]
+- Updated dependencies [cc68b984]
+- Updated dependencies [de4c3912]
+  - citation-js-utils@1.2.2
+  - tex-to-myst@1.0.30
+  - myst-common@1.4.7
+  - myst-transforms@1.3.18
+  - myst-config@1.4.7
+  - myst-frontmatter@1.4.7
+  - myst-spec-ext@1.4.7
+  - myst-to-tex@1.0.30
+
+## 1.2.8
+
+### Patch Changes
+
+- 464b955f: Fix cross references for static sites
+- 4cea894: Combine site options when using config extend
+- fec350ab: Allow remote files for template/site options
+- Updated dependencies [1b6ee5e2]
+- Updated dependencies [4cea894]
+- Updated dependencies [fec350ab]
+  - myst-transforms@1.3.17
+  - myst-frontmatter@1.4.6
+  - myst-templates@1.0.19
+  - myst-common@1.4.6
+  - myst-config@1.4.6
+  - myst-spec-ext@1.4.6
+
+## 1.2.7
+
+### Patch Changes
+
+- 61b7795: Update doi fetching to resolve 429 too many request errors
+
+## 1.2.6
+
+### Patch Changes
+
+- 10e80d03: Modify index file selection - allow tex, prefer index.ipynb over non-index md
+- 90446d99: Error if toc index file has children
+- 2c3290be: Add build command to write remote doi citations to bibtex
+- 2c3290be: Fall back to handle.net if doi.org fails
+- 286ceaaf: Fetch config files from url
+- a665cb14: Surface warnings during tocfile extension resolution
+- 2c3290be: Normalize doi keys in in-memory doi cache
+- b2736fa4: Add a log message for slow web requests
+- 2c3290be: Prioritize dois from bibtex over remote fetching
+- 10e80d03: Resolve toc patterns in intentional order
+- Updated dependencies [ad969c37]
+- Updated dependencies [20beec96]
+- Updated dependencies [3d93fdb9]
+  - myst-frontmatter@1.4.5
+  - myst-toc@0.1.1
+  - myst-transforms@1.3.16
+  - myst-common@1.4.5
+  - myst-config@1.4.5
+  - myst-spec-ext@1.4.5
+  - myst-parser@1.4.4
+
+## 1.2.5
+
+### Patch Changes
+
+- 65ade89: Consume new math structure
+- Updated dependencies [dd007024]
+- Updated dependencies [65ade89]
+- Updated dependencies [65ade89]
+- Updated dependencies [65ade89]
+- Updated dependencies [65ade89]
+- Updated dependencies [435c4329]
+  - myst-transforms@1.3.15
+  - simple-validators@1.0.5
+  - myst-to-typst@0.0.17
+  - myst-to-tex@1.0.29
+  - myst-frontmatter@1.4.4
+  - myst-common@1.4.4
+  - myst-config@1.4.4
+  - myst-spec-ext@1.4.4
+  - tex-to-myst@1.0.29
+
 ## 1.2.4
 
 ### Patch Changes
@@ -601,8 +1054,8 @@
 
   Addresses:
 
-  - https://github.com/executablebooks/mystmd/pull/748
-  - https://github.com/executablebooks/mystmd/issues/816
+  - https://github.com/jupyter-book/mystmd/pull/748
+  - https://github.com/jupyter-book/mystmd/issues/816
 
 - 134c26ab: Watch dependency files during myst start and build
 - a9073876: Remove file extensions from latex include
@@ -2164,7 +2617,7 @@ The CLI is no longer exported directly from this package. Use `mystmd`.
 
 - 17daf15e: Introduce GithubTransformer for file links.
 - 88666aee: Deprecate unified exports from `mystjs`
-- 184ad9f9: Move to https://github.com/executablebooks/mystmd
+- 184ad9f9: Move to https://github.com/jupyter-book/mystmd
 - cfb1307b: Relative paths in config should be '.' not ''
 - 615c1441: Sessions are now aware of their build path (making things more consistent)
   For example, change the template location to the site working directory.

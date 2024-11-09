@@ -1,7 +1,7 @@
 import type { Plugin } from 'unified';
 import { VFile } from 'vfile';
 import type { CrossReference, Heading, Paragraph } from 'myst-spec';
-import type { Cite, Container, Math, MathGroup, Link } from 'myst-spec-ext';
+import type { Cite, Container, Math, MathGroup, Link, IndexEntry } from 'myst-spec-ext';
 import type { PhrasingContent } from 'mdast';
 import { visit } from 'unist-util-visit';
 import { select, selectAll } from 'unist-util-select';
@@ -53,6 +53,7 @@ type ResolvableCrossReference = Omit<CrossReference, 'kind'> & {
 };
 
 function getDefaultNumberedReferenceTemplate(kind: TargetKind | string) {
+  if (kind === 'code') kind = 'program';
   const domain = kind.includes(':') ? kind.split(':')[1] : kind;
   // eslint-disable-next-line no-irregular-whitespace
   return `${domain.slice(0, 1).toUpperCase()}${domain.slice(1)} %s`;
@@ -106,9 +107,10 @@ type TargetNodes = (Container | Math | MathGroup | Heading) & {
   html_id: string;
   subcontainer?: boolean;
   parentEnumerator?: string;
+  indexEntries?: IndexEntry[];
 };
 
-type Target = {
+export type Target = {
   node: TargetNodes;
   kind: TargetKind | string;
 };
@@ -209,7 +211,7 @@ function shouldEnumerate(
   if (kind === 'heading' && node.type === 'heading') {
     return numbering[`heading_${node.depth}`]?.enabled ?? enabledDefault;
   }
-  if (node.subcontainer) return !!numbering.subfigure?.enabled ?? enabledDefault;
+  if (node.subcontainer) return numbering.subfigure?.enabled ?? enabledDefault;
   return numbering[kind]?.enabled ?? enabledDefault;
 }
 
@@ -301,6 +303,7 @@ export interface IReferenceStateResolver {
    * If the page is provided, it will only look at that page.
    */
   getTarget: (identifier?: string, page?: string) => Target | undefined;
+  getAllTargets: () => Target[];
   getFileTarget: (identifier?: string) => ReferenceState | undefined;
   getIdentifiers: () => string[];
   resolveReferenceContent: (node: ResolvableCrossReference) => void;
@@ -382,6 +385,12 @@ export class ReferenceState implements IReferenceStateResolver {
    * If node is subcontainer/subequation, a sub-count is incremented
    */
   incrementCount(node: TargetNodes, kind: TargetKind | string): string {
+    if (node.enumerator) {
+      // If the enumerator is explicitly defined, return early
+      // This is the case if the figure, for example, has an enumerator set (e.g. `2a`)
+      // The other numbering will not be affected, and may be wrong
+      return node.enumerator;
+    }
     let enumerator: string | number;
     if (kind === TargetKind.heading && node.type === 'heading') {
       this.targetCounts.heading = incrementHeadingCounts(node.depth, this.targetCounts.heading);
@@ -432,6 +441,10 @@ export class ReferenceState implements IReferenceStateResolver {
   getTarget(identifier?: string): Target | undefined {
     if (!identifier) return undefined;
     return this.targets[identifier];
+  }
+
+  getAllTargets(): Target[] {
+    return [...Object.values(this.targets)];
   }
 
   getFileTarget(identifier?: string): ReferenceState | undefined {
@@ -554,6 +567,10 @@ export class MultiPageReferenceResolver implements IReferenceStateResolver {
   getTarget(identifier?: string, page?: string): Target | undefined {
     const state = this.resolveStateProvider(identifier, page);
     return state?.getTarget(identifier);
+  }
+
+  getAllTargets(): Target[] {
+    return this.states.map((state) => state.getAllTargets()).flat();
   }
 
   getFileTarget(identifier?: string): ReferenceState | undefined {

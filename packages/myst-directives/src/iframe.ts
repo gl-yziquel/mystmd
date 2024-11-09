@@ -1,6 +1,6 @@
-import type { Iframe } from 'myst-spec-ext';
+import type { Iframe, Image } from 'myst-spec-ext';
 import type { DirectiveSpec, DirectiveData, GenericNode } from 'myst-common';
-import { normalizeLabel } from 'myst-common';
+import { addCommonDirectiveOptions, commonDirectiveOptions } from './utils.js';
 
 export const iframeDirective: DirectiveSpec = {
   name: 'iframe',
@@ -10,10 +10,7 @@ export const iframeDirective: DirectiveSpec = {
     required: true,
   },
   options: {
-    label: {
-      type: String,
-      alias: ['name'],
-    },
+    ...commonDirectiveOptions('iframe'),
     class: {
       type: String,
       // class_option: list of strings?
@@ -26,30 +23,44 @@ export const iframeDirective: DirectiveSpec = {
       type: String,
       doc: 'The alignment of the iframe in the page. Choose one of `left`, `center` or `right`',
     },
+    placeholder: {
+      type: String,
+      doc: 'A placeholder image for the iframe in static exports.',
+    },
   },
   body: { type: 'myst', doc: 'If provided, this will be the iframe caption.' },
   run(data: DirectiveData): GenericNode[] {
-    const { label, identifier } = normalizeLabel(data.options?.label as string | undefined) || {};
     const iframe: Iframe = {
       type: 'iframe',
       src: data.arg as string,
       width: data.options?.width as string,
       align: data.options?.align as Iframe['align'],
     };
+    if (data.options?.placeholder) {
+      iframe.children = [
+        {
+          type: 'image',
+          placeholder: true,
+          url: data.options.placeholder as string,
+          alt: data.options?.alt as string,
+          width: data.options?.width as string,
+          height: data.options?.height as string,
+          align: data.options?.align as Image['align'],
+        } as Image,
+      ];
+    }
     if (!data.body) {
-      iframe.label = label;
-      iframe.identifier = identifier;
       iframe.class = data.options?.class as string;
+      addCommonDirectiveOptions(data, iframe);
       return [iframe];
     }
     const container = {
       type: 'container',
       kind: 'figure',
-      identifier,
-      label,
       class: data.options?.class,
       children: [iframe, { type: 'caption', children: data.body as GenericNode[] }],
     };
+    addCommonDirectiveOptions(data, container);
     return [container];
   },
 };

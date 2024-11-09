@@ -21,6 +21,7 @@ import { createPdfGivenTexExport } from '../pdf/create.js';
 import { runMecaExport } from '../meca/index.js';
 import { runMdExport } from '../md/index.js';
 import { selectors, watch as watchReducer } from '../../store/index.js';
+import { runCffExport } from '../cff.js';
 
 export type RunExportOptions = ExportFnOptions & {
   watch?: boolean;
@@ -82,9 +83,11 @@ async function _localArticleExport(
     exportOptionsList.map(async (exportOptionsWithFile) => {
       const { $file, $project, ...exportOptions } = exportOptionsWithFile;
       const { format, output } = exportOptions;
-      const sessionClone = session.clone();
+      const sessionClone = await session.clone();
       const fileProjectPath =
-        projectPath ?? $project ?? findCurrentProjectAndLoad(sessionClone, path.dirname($file));
+        projectPath ??
+        $project ??
+        (await findCurrentProjectAndLoad(sessionClone, path.dirname($file)));
 
       if (fileProjectPath) {
         await loadProjectFromDisk(sessionClone, fileProjectPath);
@@ -112,6 +115,8 @@ async function _localArticleExport(
         exportFn = runMdExport;
       } else if (format === ExportFormats.meca) {
         exportFn = runMecaExport;
+      } else if (format === ExportFormats.cff) {
+        exportFn = runCffExport;
       } else {
         const keepTexAndLogs = format === ExportFormats.pdftex;
         exportFn = async (fnSession, fnFile, fnExportOpts, fnOpts?) => {

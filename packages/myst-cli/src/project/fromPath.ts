@@ -1,40 +1,32 @@
 import fs from 'node:fs';
-import { extname, join, sep } from 'node:path';
-import { glob } from 'glob';
+import { extname, join } from 'node:path';
 import { isDirectory } from 'myst-cli-utils';
 import { RuleId } from 'myst-common';
 import type { ISession } from '../session/types.js';
-import { selectors } from '../store/index.js';
 import { addWarningForFile } from '../utils/addWarningForFile.js';
-import { fileInfo } from '../utils/fileInfo.js';
+import { fileInfo, fileTitle } from '../utils/fileInfo.js';
 import { nextLevel } from '../utils/nextLevel.js';
 import { VALID_FILE_EXTENSIONS, isValidFile } from '../utils/resolveExtension.js';
 import { shouldIgnoreFile } from '../utils/shouldIgnoreFile.js';
-import { pagesFromTOC } from './fromTOC.js';
+import {
+  DEFAULT_INDEX_FILENAMES,
+  getIgnoreFiles,
+  pagesFromSphinxTOC,
+  comparePaths,
+} from './fromTOC.js';
 import type {
   PageLevels,
   LocalProjectFolder,
   LocalProjectPage,
   LocalProject,
   PageSlugs,
+  SlugOptions,
 } from './types.js';
 
-const DEFAULT_INDEX_FILENAMES = ['index', 'readme', 'main'];
-
-type Options = {
+type Options = SlugOptions & {
   ignore?: string[];
   suppressWarnings?: boolean;
 };
-
-/** Sort any folders/files to ensure that `chapter10`, etc., comes after `chapter9` */
-function sortByNumber(a: string, b: string) {
-  // Replace any repeated numbers with padded zeros
-  const regex = /(\d+)/g;
-  const paddedA = a.replace(regex, (match) => match.padStart(10, '0'));
-  const paddedB = b.replace(regex, (match) => match.padStart(10, '0'));
-  // Compare the modified strings
-  return paddedA.localeCompare(paddedB);
-}
 
 /**
  * Recursively traverse path for md/ipynb files
@@ -52,7 +44,8 @@ function projectPagesFromPath(
     .filter((file) => !shouldIgnoreFile(session, file))
     .map((file) => join(path, file))
     .filter((file) => !ignore || !ignore.includes(file))
-    .sort(sortByNumber);
+    .sort(comparePaths);
+
   if (session.configFiles.filter((file) => contents.includes(join(path, file))).length) {
     session.log.debug(`🔍 Found config file, ignoring subdirectory: ${path}`);
     return [];
@@ -60,7 +53,9 @@ function projectPagesFromPath(
   if (contents.includes(join(path, '_toc.yml'))) {
     const prevLevel = (level < 2 ? 1 : level - 1) as PageLevels;
     try {
-      return pagesFromTOC(session, path, prevLevel);
+      // TODO: We don't yet have a way to do nested tocs with new-style toc
+      session.log.debug(`Respecting legacy TOC in subdirectory: ${join(path, '_toc.yml')}`);
+      return pagesFromSphinxTOC(session, path, prevLevel, opts);
     } catch {
       if (!suppressWarnings) {
         addWarningForFile(
@@ -79,14 +74,18 @@ function projectPagesFromPath(
       return {
         file,
         level,
-        slug: fileInfo(file, pageSlugs).slug,
+        slug: fileInfo(file, pageSlugs, opts).slug,
+        implicit: true,
       } as LocalProjectPage;
     });
   const folders = contents
     .filter((file) => isDirectory(file))
-    .sort(sortByNumber)
+    .sort(comparePaths)
     .map((dir) => {
-      const projectFolder: LocalProjectFolder = { title: fileInfo(dir, pageSlugs).title, level };
+      const projectFolder: LocalProjectFolder = {
+        title: fileTitle(dir),
+        level,
+      };
       const pages = projectPagesFromPath(session, dir, nextLevel(level), pageSlugs, opts);
       if (!pages.length) {
         return [];
@@ -107,6 +106,9 @@ function projectPagesFromPath(
  *
  * If "{path}/index.md" or "{path}/readme.md" exist, use that. Otherwise, use the first
  * markdown file. Otherwise, use the first file of any type.
+ *
+ * This does not look into subdirectories for index files. If no index file is at the top level,
+ * it will use the first file, regardless of filename.
  */
 function indexFileFromPages(pages: (LocalProjectFolder | LocalProjectPage)[], path: string) {
   let indexFile: string | undefined;
@@ -129,8 +131,13 @@ function indexFileFromPages(pages: (LocalProjectFolder | LocalProjectPage)[], pa
   };
 
   if (!indexFile) indexFile = matcher('.md');
-  if (!indexFile) [indexFile] = files.filter((file) => extname(file) === '.md');
+  if (!indexFile) indexFile = matcher('.tex');
   if (!indexFile) indexFile = matcher('.ipynb');
+  if (!indexFile) indexFile = matcher('.myst.json');
+  if (!indexFile) [indexFile] = files.filter((file) => extname(file) === '.md');
+  if (!indexFile) [indexFile] = files.filter((file) => extname(file) === '.tex');
+  if (!indexFile) [indexFile] = files.filter((file) => extname(file) === '.ipynb');
+  if (!indexFile) [indexFile] = files.filter((file) => file.endsWith('.myst.json'));
   if (!indexFile) [indexFile] = files;
   return indexFile;
 }
@@ -138,31 +145,20 @@ function indexFileFromPages(pages: (LocalProjectFolder | LocalProjectPage)[], pa
 /**
  * Build project structure from local file/folder structure.
  */
-export async function projectFromPath(
+export function projectFromPath(
   session: ISession,
   path: string,
   indexFile?: string,
-): Promise<Omit<LocalProject, 'bibliography'>> {
+  opts?: SlugOptions,
+): Omit<LocalProject, 'bibliography'> {
   const ext_string = VALID_FILE_EXTENSIONS.join(' or ');
   if (indexFile) {
     if (!isValidFile(indexFile))
       throw Error(`Index file ${indexFile} has invalid extension; must be ${ext_string}}`);
     if (!fs.existsSync(indexFile)) throw Error(`Index file ${indexFile} not found`);
   }
-  const rootConfigYamls = session.configFiles.map((file) => join(path, file));
-  const projectConfig = selectors.selectLocalProjectConfig(session.store.getState(), path);
-  const excludePatterns = projectConfig?.exclude ?? [];
-  const excludeFiles = (
-    await Promise.all(
-      excludePatterns.map(async (pattern) => {
-        const matches = await glob(pattern.split(sep).join('/'));
-        return matches
-          .map((match) => match.split('/').join(sep))
-          .filter((match) => isValidFile(match));
-      }),
-    )
-  ).flat();
-  const ignoreFiles = [...rootConfigYamls, ...excludeFiles];
+  if (opts?.urlFolders && !opts.projectPath) opts.projectPath = path;
+  const ignoreFiles = getIgnoreFiles(session, path);
   let implicitIndex = false;
   if (!indexFile) {
     const searchPages = projectPagesFromPath(
@@ -170,7 +166,7 @@ export async function projectFromPath(
       path,
       1,
       {},
-      { ignore: ignoreFiles, suppressWarnings: true },
+      { ...opts, ignore: ignoreFiles, suppressWarnings: true },
     );
     if (!searchPages.length) {
       throw Error(`No valid files with extensions ${ext_string} found in path "${path}"`);
@@ -180,8 +176,9 @@ export async function projectFromPath(
     implicitIndex = true;
   }
   const pageSlugs: PageSlugs = {};
-  const { slug } = fileInfo(indexFile, pageSlugs);
+  const { slug } = fileInfo(indexFile, pageSlugs, { ...opts, session });
   const pages = projectPagesFromPath(session, path, 1, pageSlugs, {
+    ...opts,
     ignore: [indexFile, ...ignoreFiles],
   });
   return { file: indexFile, index: slug, path, pages, implicitIndex };

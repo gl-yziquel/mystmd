@@ -1,6 +1,6 @@
 {
   "name": "citation-js-utils",
-  "version": "1.2.1",
+  "version": "1.2.6",
   "description": "Utilities for citation-js.",
   "type": "module",
   "exports": "./dist/index.js",
@@ -19,7 +19,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/executablebooks/mystmd.git"
+    "url": "git+https://github.com/jupyter-book/mystmd.git"
   },
   "keywords": [
     "citation-js"
@@ -27,17 +27,17 @@
   "author": "Rowan Cockett <rowan@curvenote.com>",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/executablebooks/mystmd/issues"
+    "url": "https://github.com/jupyter-book/mystmd/issues"
   },
-  "homepage": "https://github.com/executablebooks/mystmd/tree/main/packages/citation-js-utils",
+  "homepage": "https://github.com/jupyter-book/mystmd/tree/main/packages/citation-js-utils",
   "engines": {
     "node": ">=12",
     "npm": ">=6"
   },
   "dependencies": {
-    "@citation-js/core": "^0.7.6",
-    "@citation-js/plugin-bibtex": "^0.7.8",
-    "@citation-js/plugin-csl": "^0.7.6",
+    "@citation-js/core": "^0.7.14",
+    "@citation-js/plugin-bibtex": "^0.7.14",
+    "@citation-js/plugin-csl": "^0.7.14",
     "sanitize-html": "^2.7.0"
   },
   "devDependencies": {

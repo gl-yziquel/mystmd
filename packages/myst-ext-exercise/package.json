@@ -1,11 +1,11 @@
 {
   "name": "myst-ext-exercise",
-  "version": "1.0.6",
+  "version": "1.0.8",
   "sideEffects": false,
   "license": "MIT",
   "description": "MyST extension for exercise",
   "author": "Rowan Cockett <rowan@curvenote.com>",
-  "homepage": "https://github.com/executablebooks/mystmd/tree/main/packages/myst-ext-exercise",
+  "homepage": "https://github.com/jupyter-book/mystmd/tree/main/packages/myst-ext-exercise",
   "type": "module",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/executablebooks/mystmd.git"
+    "url": "git+https://github.com/jupyter-book/mystmd.git"
   },
   "scripts": {
     "clean": "rimraf dist",
@@ -29,12 +29,12 @@
     "build": "npm-run-all -l clean -p build:esm"
   },
   "bugs": {
-    "url": "https://github.com/executablebooks/mystmd/issues"
+    "url": "https://github.com/jupyter-book/mystmd/issues"
   },
   "dependencies": {
-    "myst-common": "^1.3.0"
+    "myst-common": "^1.7.2"
   },
   "devDependencies": {
-    "myst-parser": "^1.4.0"
+    "myst-parser": "^1.5.7"
   }
 }

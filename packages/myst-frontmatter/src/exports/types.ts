@@ -1,3 +1,5 @@
+import type { TOC } from 'myst-toc';
+
 export enum ExportFormats {
   pdf = 'pdf',
   tex = 'tex',
@@ -7,6 +9,7 @@ export enum ExportFormats {
   xml = 'xml',
   md = 'md',
   meca = 'meca',
+  cff = 'cff',
 }
 
 export type ExportArticle = {
@@ -22,10 +25,13 @@ export type Export = {
   template?: string | null;
   output?: string;
   zip?: boolean;
-  toc?: string;
+  toc?: TOC;
   articles?: ExportArticle[];
   imports?: string[];
+  top_level?: 'parts' | 'chapters' | 'sections';
   /** sub_articles are only for jats xml export */
   sub_articles?: string[];
   /** MECA: to, from later */
+  /** tocFile is not set by user; it will be set instead of `toc` when user provides a string for `toc`*/
+  tocFile?: string;
 } & Record<string, any>;

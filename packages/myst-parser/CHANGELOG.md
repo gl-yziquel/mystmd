@@ -1,5 +1,111 @@
 # myst-parser
 
+## 1.5.8
+
+### Patch Changes
+
+- Updated dependencies [eb411d0b]
+  - myst-directives@1.5.8
+  - myst-common@1.7.4
+  - myst-roles@1.5.8
+
+## 1.5.7
+
+### Patch Changes
+
+- ce3c11c: Update inter-version deps
+- Updated dependencies [ce3c11c]
+  - myst-directives@1.5.7
+  - myst-roles@1.5.7
+
+## 1.5.6
+
+### Patch Changes
+
+- c758f1b5: Directive option flag is always a boolean
+- Updated dependencies [c758f1b5]
+  - markdown-it-myst@1.0.10
+  - myst-roles@1.5.6
+  - myst-directives@1.5.6
+
+## 1.5.5
+
+### Patch Changes
+
+- Updated dependencies [63f9265b]
+- Updated dependencies [8ba7b73a]
+  - myst-roles@1.5.5
+  - myst-common@1.6.0
+  - myst-directives@1.5.5
+
+## 1.5.4
+
+### Patch Changes
+
+- 88396dd: Add enumerator and enumerated to directives
+- 5ac2d0bc: Fix inline parsing for roles
+- 1a5f3f33: Enable strikethrough as markdownit extension
+- Updated dependencies [60fc2574]
+- Updated dependencies [88396dd]
+- Updated dependencies [5ac2d0bc]
+- Updated dependencies [4e880f3e]
+  - myst-directives@1.5.4
+  - markdown-it-myst@1.0.9
+  - myst-common@1.5.4
+  - myst-roles@1.5.4
+
+## 1.5.3
+
+### Patch Changes
+
+- Updated dependencies [857c5acf]
+  - myst-directives@1.5.3
+  - myst-roles@1.5.3
+  - myst-common@1.5.3
+
+## 1.5.2
+
+### Patch Changes
+
+- Updated dependencies [134598fd]
+- Updated dependencies [3fd53be8]
+  - myst-directives@1.5.2
+  - myst-common@1.5.2
+  - myst-roles@1.5.2
+
+## 1.5.1
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - markdown-it-myst@1.0.8
+  - myst-directives@1.5.1
+  - myst-common@1.5.1
+  - myst-roles@1.5.1
+
+## 1.5.0
+
+### Patch Changes
+
+- 8e486e56: Ignore 'dot' top level domain.
+- 372de44c: Exclude '.so' from tlds
+- 848b6d8b: Fix options passing for mystParse unified plugin
+- Updated dependencies [d04ceb6a]
+- Updated dependencies [0576d5ad]
+  - myst-directives@1.5.0
+  - myst-common@1.5.0
+  - myst-roles@1.5.0
+
+## 1.4.4
+
+### Patch Changes
+
+- Updated dependencies [933b7b33]
+  - myst-directives@1.4.4
+  - myst-common@1.4.5
+  - myst-roles@1.4.4
+
 ## 1.4.3
 
 ### Patch Changes
@@ -558,6 +664,6 @@
 
 - 88666aee: Deprecate unified exports from `mystjs`
 - a9110bff: Add positions to nodes and update tests
-- 184ad9f9: Move to https://github.com/executablebooks/mystmd
+- 184ad9f9: Move to https://github.com/jupyter-book/mystmd
 - a9110bff: Update line-number logic for code-block to come inline with sphinx
 - a9110bff: Pass image height to image token if it exists

@@ -1,5 +1,49 @@
 # jats-to-myst
 
+## 1.0.30
+
+### Patch Changes
+
+- ce3c11c: Update inter-version deps
+- Updated dependencies [ce3c11c]
+  - myst-transforms@1.3.26
+
+## 1.0.29
+
+### Patch Changes
+
+- Updated dependencies [4a3ee6db]
+- Updated dependencies [897136f]
+- Updated dependencies [4a3ee6db]
+- Updated dependencies [918223b8]
+- Updated dependencies [4a3ee6db]
+- Updated dependencies [4a3ee6db]
+  - myst-common@1.7.2
+  - myst-frontmatter@1.7.2
+  - myst-spec-ext@1.7.2
+
+## 1.0.28
+
+### Patch Changes
+
+- Updated dependencies [3c65de0]
+- Updated dependencies [64a33837]
+- Updated dependencies [3c65de0]
+  - myst-frontmatter@1.7.1
+  - myst-common@1.7.1
+  - myst-spec-ext@1.7.1
+
+## 1.0.27
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - myst-frontmatter@1.5.1
+  - myst-transforms@1.3.20
+  - myst-spec-ext@1.5.1
+  - myst-common@1.5.1
+
 ## 1.0.26
 
 ### Patch Changes

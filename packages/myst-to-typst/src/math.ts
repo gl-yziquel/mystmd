@@ -1,57 +1,82 @@
+import { normalizeLabel } from 'myst-common';
 import { texToTypst } from 'tex-to-typst';
-import type { Handler, ITypstSerializer } from './types.js';
+import type { Handler, ITypstSerializer, MathPlugins } from './types.js';
 
 function addMacrosToState(value: string, state: ITypstSerializer) {
   if (!state.options.math) return;
   Object.entries(state.options.math).forEach(([k, v]) => {
-    const key = texToTypst(k);
-    if (value.includes(key)) state.data.mathPlugins[key] = texToTypst(v);
+    const key = texToTypst(k).value;
+    if (value.includes(key)) {
+      const typstState = texToTypst(v.macro);
+      state.data.mathPlugins[key] = typstState.value;
+      typstState.macros?.forEach((macro) => {
+        state.useMacro(macro);
+      });
+    }
   });
 }
 
-type MathPlugins = ITypstSerializer['data']['mathPlugins'];
+function findCommandInMacro(macro: string, command: string) {
+  const escapedCommand = command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const commandRe = new RegExp(`${escapedCommand}(?![a-zA-Z])`, 'g');
+  return [...macro.matchAll(commandRe)].length > 0;
+}
+
+function replaceCommandInMacro(macro: string, command: string, replaceValue: string) {
+  const escapedCommand = command.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+  const commandRe = new RegExp(`${escapedCommand}(?![a-zA-Z])`, 'g');
+  return macro.replaceAll(commandRe, replaceValue);
+}
 
 /**
- * Add any required recursive commands found, for example,
- * if only `\aMat` was included in the content, but sill requires other commands:
+ * MyST typst exports currently require recursive commands to be resolved
  *
- * ```javascript
- * {
- *    '\aNrm': "a",
- *    '\aMat': '[\mathrm{\aNrm}]',
- * }
- * ```
+ * As opposed to tex where recursive commands can remain and the latex compiler
+ * will handle them.
+ *
+ * All the state.options.math macros are passed to this function and resolved prior to
+ * exporting typst.
  */
-export function withRecursiveCommands(
-  state: ITypstSerializer,
-  plugins = state.data.mathPlugins,
-): MathPlugins {
-  if (!state.options.math) return plugins;
-  const pluginsList = Object.entries(plugins);
-  const addedPlugins: MathPlugins = {};
-  Object.entries(state.options.math).forEach(([k, v]) => {
-    const key = texToTypst(k);
-    if (plugins[key]) return;
-    pluginsList.forEach(([, value]) => {
-      if (value.includes(key)) addedPlugins[key] = texToTypst(v);
-    });
-  });
-  const newPlugins = { ...addedPlugins, ...plugins };
-  if (Object.keys(addedPlugins).length === 0) return newPlugins;
-  return withRecursiveCommands(state, newPlugins);
+export function resolveRecursiveCommands(plugins: MathPlugins): MathPlugins {
+  let pluginsUpdated = false;
+  const newPlugins = Object.fromEntries(
+    Object.entries(plugins).map(([command, value]) => {
+      let newMacro = value.macro;
+      Object.entries(plugins).forEach(([c, { macro: m }]) => {
+        if (findCommandInMacro(newMacro, c)) {
+          if (command === c) {
+            // recursive issue
+          } else {
+            newMacro = replaceCommandInMacro(newMacro, c, m);
+            pluginsUpdated = true;
+          }
+        }
+      });
+      return [command, { ...value, macro: newMacro }];
+    }),
+  );
+  if (pluginsUpdated) return resolveRecursiveCommands(newPlugins);
+  return newPlugins;
 }
 
 const math: Handler = (node, state) => {
-  const value = texToTypst(node.value);
+  const { value, macros } = texToTypst(node.value);
+  macros?.forEach((macro) => {
+    state.useMacro(macro);
+  });
+  const { identifier: label } = normalizeLabel(node.label) ?? {};
   addMacrosToState(value, state);
   state.ensureNewLine();
   // Note: must have spaces $ math $ for the block!
-  state.write(`$ ${value} $${node.label ? ` <${node.label}>` : ''}\n\n`);
+  state.write(`$ ${value} $${label ? ` <${label}>` : ''}\n\n`);
   state.ensureNewLine(true);
 };
 
 const inlineMath: Handler = (node, state) => {
-  const value = texToTypst(node.value);
+  const { value, macros } = texToTypst(node.value);
+  macros?.forEach((macro) => {
+    state.useMacro(macro);
+  });
   addMacrosToState(value, state);
   state.write(`$${value}$`);
 };

@@ -1,5 +1,21 @@
 # myst-to-docx
 
+## 1.0.12
+
+### Patch Changes
+
+- ce3c11c: Update inter-version deps
+
+## 1.0.11
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - myst-frontmatter@1.5.1
+  - myst-spec-ext@1.5.1
+  - myst-common@1.5.1
+
 ## 1.0.10
 
 ### Patch Changes
@@ -325,7 +341,7 @@
 
 ### Patch Changes
 
-- 184ad9f9: Move to https://github.com/executablebooks/mystmd
+- 184ad9f9: Move to https://github.com/jupyter-book/mystmd
 - 0b2298fd: Add admonitions to docx
 - Updated dependencies [184ad9f9]
 - Updated dependencies [615c1441]

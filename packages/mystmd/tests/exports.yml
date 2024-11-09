@@ -41,18 +41,52 @@ cases:
     outputs:
       - path: export-fm-override/_build/out.tex
         content: outputs/templated-tex.tex
-  - title: Multi-page tex export with default toc
+  - title: Multi-page tex export with legacy toc
+    cwd: multi-page-legacy-toc-tex
+    command: myst build --tex --ci
+    outputs:
+      - path: multi-page-legacy-toc-tex/_build/out.tex
+        content: outputs/multi-page-tex.tex
+      - path: multi-page-legacy-toc-tex/_build/out-one.tex
+        content: outputs/multi-page-tex-one-chapters.tex
+      - path: multi-page-legacy-toc-tex/_build/out-two.tex
+        content: outputs/multi-page-tex-two-chapters.tex
+      - path: multi-page-legacy-toc-tex/_build/out-three.tex
+        content: outputs/multi-page-tex-three-chapters.tex
+  - title: Multi-page tex export with toc
     cwd: multi-page-toc-tex
     command: myst build --tex --ci
     outputs:
-      - path: multi-page-toc-tex/_build/out.tex
-        content: outputs/multi-page-tex.tex
-      - path: multi-page-toc-tex/_build/out-one.tex
+      - path: multi-page-toc-tex/_build/out-chapters.tex
+        content: outputs/multi-page-tex-chapters.tex
+      - path: multi-page-toc-tex/_build/out-chapters-one.tex
         content: outputs/multi-page-tex-one-chapters.tex
-      - path: multi-page-toc-tex/_build/out-two.tex
+      - path: multi-page-toc-tex/_build/out-chapters-two.tex
         content: outputs/multi-page-tex-two-chapters.tex
-      - path: multi-page-toc-tex/_build/out-three.tex
+      - path: multi-page-toc-tex/_build/out-chapters-three.tex
         content: outputs/multi-page-tex-three-chapters.tex
+      - path: multi-page-toc-tex/_build/out-sections-one.tex
+        content: outputs/multi-page-tex-one-sections.tex
+      - path: multi-page-toc-tex/_build/out-sections-two.tex
+        content: outputs/multi-page-tex-two-sections.tex
+      - path: multi-page-toc-tex/_build/out-sections-three.tex
+        content: outputs/multi-page-tex-three-sections.tex
+      - path: multi-page-toc-tex/_build/out-implicit-one.tex
+        content: outputs/multi-page-tex-one-sections.tex
+      - path: multi-page-toc-tex/_build/out-implicit-two.tex
+        content: outputs/multi-page-tex-two-sections.tex
+      - path: multi-page-toc-tex/_build/out-implicit-three.tex
+        content: outputs/multi-page-tex-three-sections.tex
+      - path: multi-page-toc-tex/_build/out-single.tex
+        content: outputs/multi-page-tex-single.tex
+  - title: Multi-page tex export with parts
+    cwd: multi-page-tex-parts
+    command: myst build --tex --ci
+    outputs:
+      - path: multi-page-tex-parts/_build/out-with-part.tex
+        content: multi-page-tex-parts/outputs/out-with-part.tex
+      - path: multi-page-tex-parts/_build/out-without-part.tex
+        content: multi-page-tex-parts/outputs/out-without-part.tex
   - title: Multi-page tex export with explicit articles
     cwd: multi-page-articles-tex
     command: myst build --tex --ci
@@ -97,6 +131,16 @@ cases:
         content: outputs/multi-page-tex-two-chapters.tex
       - path: multi-page-override-tex/_build/out-three.tex
         content: outputs/multi-page-tex-three-chapters.tex
+  - title: Nested toc file is respected
+    cwd: nested-toc-file
+    command: myst build --tex --ci
+    outputs:
+      - path: nested-toc-file/_build/out.tex
+        content: nested-toc-file/.outputs/out.tex
+      - path: nested-toc-file/_build/out-six.tex
+        content: nested-toc-file/.outputs/out-six.tex
+      - path: nested-toc-file/_build/out-five.tex
+        content: nested-toc-file/.outputs/out-five.tex
   - title: Notebook exports to tex; frontmatter from first cell only
     cwd: notebook-with-fm
     command: myst build --tex --ci
@@ -132,9 +176,9 @@ cases:
     command: myst build --tex --ci
     outputs:
       - path: dois/_build/out.tex
-        content: outputs/dois.tex
+        content: dois/outputs/dois.tex
       - path: dois/_build/main.bib
-        content: outputs/dois.bib
+        content: dois/outputs/dois.bib
   - title: Basic site build
     cwd: basic-site
     command: myst build
@@ -158,6 +202,12 @@ cases:
         content: outputs/site-xrefs-config.json
       - path: site-xrefs/_build/site/myst.xref.json
         content: outputs/site-xrefs-myst.xref.json
+  - title: Search site build
+    cwd: site-search
+    command: myst build
+    outputs:
+      - path: site-search/_build/site/myst.search.json
+        content: outputs/site-search-myst.search.json
   - title: Notebook embed site build
     cwd: notebook-fig-embed
     command: myst build
@@ -172,3 +222,79 @@ cases:
         content: outputs/extend-config-index.json
       - path: extend-config/proj-a/_build/site/config.json
         content: outputs/extend-config-config.json
+  - title: Math macros
+    cwd: math-macros
+    command: myst build --all --ci
+    outputs:
+      - path: math-macros/_build/exports/index.typ
+        content: math-macros/outputs/index.typ
+      - path: math-macros/_build/exports/index.tex
+        content: math-macros/outputs/index.tex
+      - path: math-macros/_build/exports/index.xml
+        content: math-macros/outputs/index.xml
+      - path: math-macros/_build/site/content/index.json
+        content: math-macros/outputs/index.json
+      - path: math-macros/_build/site/config.json
+        content: math-macros/outputs/config.json
+  - title: Write DOI .bib file
+    cwd: write-doi-bib
+    command: myst build --doi-bib
+    outputs:
+      - path: write-doi-bib/myst.doi.bib
+        content: write-doi-bib/outputs/myst.doi.bib
+  - title: Bibtex file is written correctly on tex export
+    cwd: tex-with-bib
+    command: myst build --tex
+    outputs:
+      - path: tex-with-bib/_build/main.bib
+        content: tex-with-bib/outputs/main.bib
+  - title: Index entries write to site and tex
+    cwd: indices
+    command: myst build --all --ci
+    outputs:
+      - path: indices/_build/exports/myst_tex/index.tex
+        content: indices/outputs/index.tex
+      - path: indices/_build/exports/myst_tex/index-first.tex
+        content: indices/outputs/index-first.tex
+      - path: indices/_build/exports/myst_tex/index-index.tex
+        content: indices/outputs/index-index.tex
+      - path: indices/_build/exports/myst_tex/index-joke.tex
+        content: indices/outputs/index-joke.tex
+      - path: indices/_build/exports/myst_tex/index-recipes.tex
+        content: indices/outputs/index-recipes.tex
+      - path: indices/_build/site/content/index.json
+        content: indices/outputs/index.json
+      - path: indices/_build/site/content/first.json
+        content: indices/outputs/first.json
+      - path: indices/_build/site/content/joke.json
+        content: indices/outputs/joke.json
+      - path: indices/_build/site/content/recipes.json
+        content: indices/outputs/recipes.json
+  - title: Citation cff file builds
+    cwd: citation-cff
+    command: myst build --cff myst.yml
+    outputs:
+      - path: citation-cff/CITATION.cff
+        content: citation-cff/outputs/CITATION.cff
+  - title: Raw directives and roles
+    cwd: raw
+    command: myst build --all
+    outputs:
+      - path: raw/_build/out.tex
+        content: raw/outputs/out.tex
+      - path: raw/_build/out.typ
+        content: raw/outputs/out.typ
+      - path: raw/_build/site/content/index.json
+        content: raw/outputs/index.json
+  - title: URL folder structure
+    cwd: url-folders
+    command: myst build
+    outputs:
+      - path: url-folders/_build/site/config.json
+        content: url-folders/outputs/config.json
+      - path: url-folders/_build/site/myst.search.json
+        content: url-folders/outputs/myst.search.json
+      - path: url-folders/_build/site/myst.xref.json
+        content: url-folders/outputs/myst.xref.json
+      - path: url-folders/_build/site/content/my-proj/readme.json
+        content: url-folders/outputs/readme.json

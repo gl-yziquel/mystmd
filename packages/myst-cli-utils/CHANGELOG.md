@@ -1,5 +1,17 @@
 # myst-cli-utils
 
+## 2.0.11
+
+### Patch Changes
+
+- b14e0fb3: Force exit when the task is complete.
+
+## 2.0.10
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+
 ## 2.0.9
 
 ### Patch Changes
@@ -102,7 +114,7 @@
 
 ### Patch Changes
 
-- 184ad9f9: Move to https://github.com/executablebooks/mystmd
+- 184ad9f9: Move to https://github.com/jupyter-book/mystmd
 
 ## 0.0.5
 

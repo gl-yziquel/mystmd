@@ -1,5 +1,113 @@
 # myst-to-tex
 
+## 1.0.40
+
+## 1.0.39
+
+### Patch Changes
+
+- Updated dependencies [eb411d0b]
+  - myst-spec-ext@1.7.4
+  - myst-common@1.7.4
+  - myst-frontmatter@1.7.4
+
+## 1.0.38
+
+### Patch Changes
+
+- ce3c11c: Update inter-version deps
+- Updated dependencies [ce3c11c]
+  - myst-ext-proof@1.0.11
+
+## 1.0.37
+
+### Patch Changes
+
+- 594a0f87: Top level AMS environments are not wrapped
+- adb3c75a: Allow index entries on many more nodes for myst-to-tex
+- Updated dependencies [760e411]
+  - myst-frontmatter@1.6.1
+  - myst-common@1.6.1
+  - myst-spec-ext@1.6.1
+
+## 1.0.36
+
+### Patch Changes
+
+- 822fd2d5: Ensure that AMS Math environments are only used if there is a single environment that encloses the entire math environment.
+
+## 1.0.35
+
+### Patch Changes
+
+- Updated dependencies [85520edd]
+- Updated dependencies [da224b78]
+- Updated dependencies [4e880f3e]
+- Updated dependencies [e2b74f4d]
+  - myst-frontmatter@1.5.4
+  - myst-spec-ext@1.5.4
+  - myst-common@1.5.4
+
+## 1.0.34
+
+### Patch Changes
+
+- 857c5acf: Add raw directives/roles for inserting tex/typst-specific content
+- Updated dependencies [857c5acf]
+- Updated dependencies [313b218]
+  - myst-spec-ext@1.5.3
+  - myst-frontmatter@1.5.3
+  - myst-common@1.5.3
+
+## 1.0.33
+
+### Patch Changes
+
+- 8b75342d: Fix handling of remove- for exports
+
+## 1.0.32
+
+### Patch Changes
+
+- 134598fd: Support index in latex export
+- Updated dependencies [134598fd]
+- Updated dependencies [38a45645]
+- Updated dependencies [3fd53be8]
+  - myst-common@1.5.2
+  - myst-frontmatter@1.5.2
+  - myst-spec-ext@1.5.2
+
+## 1.0.31
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - myst-frontmatter@1.5.1
+  - myst-ext-proof@1.0.10
+  - myst-spec-ext@1.5.1
+  - myst-common@1.5.1
+
+## 1.0.30
+
+### Patch Changes
+
+- Updated dependencies [1e2092dc]
+  - myst-common@1.4.7
+  - myst-frontmatter@1.4.7
+  - myst-spec-ext@1.4.7
+
+## 1.0.29
+
+### Patch Changes
+
+- 65ade89: Consume new math structure
+- Updated dependencies [65ade89]
+- Updated dependencies [435c4329]
+  - myst-frontmatter@1.4.4
+  - myst-common@1.4.4
+  - myst-spec-ext@1.4.4
+
 ## 1.0.28
 
 ### Patch Changes
@@ -549,7 +657,7 @@
 
 ### Patch Changes
 
-- 184ad9f9: Move to https://github.com/executablebooks/mystmd
+- 184ad9f9: Move to https://github.com/jupyter-book/mystmd
 - Updated dependencies [184ad9f9]
 - Updated dependencies [615c1441]
 - Updated dependencies [3fba7cb7]

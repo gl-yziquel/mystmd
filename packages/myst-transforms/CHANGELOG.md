@@ -1,5 +1,152 @@
 # myst-transforms
 
+## 1.3.27
+
+### Patch Changes
+
+- Updated dependencies [eb411d0b]
+  - myst-spec-ext@1.7.4
+  - myst-common@1.7.4
+  - myst-frontmatter@1.7.4
+  - myst-to-html@1.5.8
+
+## 1.3.26
+
+### Patch Changes
+
+- ce3c11c: Update inter-version deps
+- Updated dependencies [ce3c11c]
+  - myst-to-html@1.5.7
+
+## 1.3.25
+
+### Patch Changes
+
+- myst-to-html@1.5.6
+
+## 1.3.24
+
+### Patch Changes
+
+- Updated dependencies [85db77c7]
+- Updated dependencies [9c1b8c73]
+- Updated dependencies [8ba7b73a]
+  - myst-spec-ext@1.6.0
+  - myst-frontmatter@1.6.0
+  - myst-common@1.6.0
+  - myst-to-html@1.5.5
+
+## 1.3.23
+
+### Patch Changes
+
+- 60fc2574: Ensure é ends up in the E index.
+- d1d3cda9: Expand github alerts see https://docs.github.com/en/get-started/writing-on-github/getting-started-with-writing-and-formatting-on-github/basic-writing-and-formatting-syntax#alerts
+- 85520edd: Allow for explicit ignoring of longer abbreviations
+- 88396dd: Add enumerator and enumerated to directives
+- Updated dependencies [85520edd]
+- Updated dependencies [da224b78]
+- Updated dependencies [4e880f3e]
+- Updated dependencies [e2b74f4d]
+  - myst-frontmatter@1.5.4
+  - myst-spec-ext@1.5.4
+  - myst-common@1.5.4
+  - myst-to-html@1.5.4
+
+## 1.3.22
+
+### Patch Changes
+
+- Updated dependencies [857c5acf]
+- Updated dependencies [313b218]
+  - myst-spec-ext@1.5.3
+  - myst-frontmatter@1.5.3
+  - myst-common@1.5.3
+  - myst-to-html@1.5.3
+
+## 1.3.21
+
+### Patch Changes
+
+- 134598fd: Add index directives/roles to myst-cli
+- Updated dependencies [134598fd]
+- Updated dependencies [38a45645]
+- Updated dependencies [3fd53be8]
+  - myst-common@1.5.2
+  - myst-frontmatter@1.5.2
+  - myst-spec-ext@1.5.2
+  - myst-to-html@1.5.2
+
+## 1.3.20
+
+### Patch Changes
+
+- b3e9df9d: Update to Project Jupyter and change all URLs
+- Updated dependencies [b3e9df9d]
+  - myst-frontmatter@1.5.1
+  - myst-spec-ext@1.5.1
+  - myst-to-html@1.5.1
+  - myst-common@1.5.1
+
+## 1.3.19
+
+### Patch Changes
+
+- 661039d4: Do not duplicate h1 title nested in block
+- 19e96e27: Fix conversion of hast fragments to mdast fragments
+- 1239104c: Change code caption numbers from 'Code' to 'Program'
+- Updated dependencies [8c487991]
+- Updated dependencies [f6aa726c]
+- Updated dependencies [0576d5ad]
+- Updated dependencies [478c4d4f]
+  - myst-frontmatter@1.5.0
+  - myst-common@1.5.0
+  - myst-spec-ext@1.5.0
+  - myst-to-html@1.5.0
+
+## 1.3.18
+
+### Patch Changes
+
+- 2a8fe63f: Combine html nodes split by whitespace in reconstructHtml transform
+- Updated dependencies [1e2092dc]
+  - myst-common@1.4.7
+  - myst-frontmatter@1.4.7
+  - myst-spec-ext@1.4.7
+
+## 1.3.17
+
+### Patch Changes
+
+- 1b6ee5e2: Support HTML video tags
+- Updated dependencies [4cea894]
+  - myst-frontmatter@1.4.6
+  - myst-common@1.4.6
+  - myst-spec-ext@1.4.6
+
+## 1.3.16
+
+### Patch Changes
+
+- 3d93fdb9: Footnotes that are reused should have the same number
+- Updated dependencies [ad969c37]
+  - myst-frontmatter@1.4.5
+  - myst-common@1.4.5
+  - myst-spec-ext@1.4.5
+  - myst-to-html@1.4.4
+
+## 1.3.15
+
+### Patch Changes
+
+- dd007024: Fix link transform for card links
+- 65ade89: Consume new math structure
+- Updated dependencies [65ade89]
+- Updated dependencies [435c4329]
+  - myst-frontmatter@1.4.4
+  - myst-common@1.4.4
+  - myst-spec-ext@1.4.4
+
 ## 1.3.14
 
 ### Patch Changes
@@ -273,8 +420,8 @@
 
   Addresses:
 
-  - https://github.com/executablebooks/mystmd/pull/748
-  - https://github.com/executablebooks/mystmd/issues/816
+  - https://github.com/jupyter-book/mystmd/pull/748
+  - https://github.com/jupyter-book/mystmd/issues/816
   - myst-common@1.1.21
   - myst-spec-ext@1.1.21
   - myst-to-html@1.0.21
@@ -765,7 +912,7 @@
 ### Patch Changes
 
 - 17daf15e: Introduce GithubTransformer for file links.
-- 184ad9f9: Move to https://github.com/executablebooks/mystmd
+- 184ad9f9: Move to https://github.com/jupyter-book/mystmd
 - Updated dependencies [184ad9f9]
 - Updated dependencies [3fba7cb7]
   - intersphinx@0.0.4

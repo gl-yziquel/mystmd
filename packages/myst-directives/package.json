@@ -1,11 +1,11 @@
 {
   "name": "myst-directives",
-  "version": "1.4.3",
+  "version": "1.5.8",
   "sideEffects": false,
   "license": "MIT",
   "description": "Default directive definitions for MyST",
   "author": "Franklin Koch <franklin@curvenote.com>",
-  "homepage": "https://github.com/executablebooks/mystmd/tree/main/packages/myst-directives",
+  "homepage": "https://github.com/jupyter-book/mystmd/tree/main/packages/myst-directives",
   "type": "module",
   "exports": "./dist/index.js",
   "types": "./dist/index.d.ts",
@@ -17,7 +17,7 @@
   },
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/executablebooks/mystmd.git"
+    "url": "git+https://github.com/jupyter-book/mystmd.git"
   },
   "scripts": {
     "clean": "rimraf dist",
@@ -29,14 +29,14 @@
     "build": "npm-run-all -l clean -p build:esm"
   },
   "bugs": {
-    "url": "https://github.com/executablebooks/mystmd/issues"
+    "url": "https://github.com/jupyter-book/mystmd/issues"
   },
   "dependencies": {
     "classnames": "^2.3.2",
     "csv-parse": "^5.5.5",
     "js-yaml": "^4.1.0",
-    "myst-common": "^1.4.2",
-    "myst-spec-ext": "^1.4.2",
+    "myst-common": "^1.7.4",
+    "myst-spec-ext": "^1.7.4",
     "nanoid": "^4.0.2",
     "unist-util-select": "^4.0.3",
     "vfile": "^5.3.7"

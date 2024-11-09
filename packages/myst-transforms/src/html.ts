@@ -116,6 +116,14 @@ const defaultHtmlToMdastOptions: Record<keyof HtmlTransformOptions, any> = {
       if (node.properties.alt) attrs.alt = node.properties.alt;
       return h(node, 'image', attrs);
     },
+    video(h: H, node: any) {
+      // Currently this creates an image node, we should change this to video in the future
+      const attrs = addClassAndIdentifier(node);
+      attrs.url = String(node.properties.src || '');
+      if (node.properties.title) attrs.title = node.properties.title;
+      if (node.properties.alt) attrs.alt = node.properties.alt;
+      return h(node, 'image', attrs);
+    },
     figure(h: H, node: any) {
       const attrs = addClassAndIdentifier(node);
       return h(node, 'container', attrs, all(h, node));
@@ -132,6 +140,9 @@ const defaultHtmlToMdastOptions: Record<keyof HtmlTransformOptions, any> = {
     },
     sub(h: H, node: any) {
       return h(node, 'subscript', all(h, node));
+    },
+    kbd(h: H, node: any) {
+      return h(node, 'keyboard', all(h, node));
     },
     cite(h: H, node: any) {
       const attrs = addClassAndIdentifier(node);
@@ -165,7 +176,7 @@ export function htmlTransform(tree: GenericParent, opts?: HtmlTransformOptions) 
         n.tagName = '_brKeep';
       });
     }
-    const mdast = unified().use(rehypeRemark, { handlers }).runSync(hast);
+    const mdast = unified().use(rehypeRemark, { handlers, document: false }).runSync(hast);
     node.type = 'htmlParsed';
     node.children = mdast.children as Parent[];
     visit(node, (n: any) => delete n.position);
@@ -272,6 +283,16 @@ function reconstructHtml(tree: GenericParent) {
   htmlOpenNodes.forEach((node: GenericNode) => {
     delete node.children;
   });
+  // Finalize children by combining consecutive html nodes
+  const combined: GenericNode[] = [];
+  tree.children.forEach((child) => {
+    if (combined[combined.length - 1]?.type === 'html' && child.type === 'html') {
+      combined[combined.length - 1].value = `${combined[combined.length - 1].value}${child.value}`;
+    } else if (child.type !== '__delete__') {
+      combined.push(child);
+    }
+  });
+  tree.children = combined;
 }
 
 /**

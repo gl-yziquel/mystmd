@@ -1,7 +1,11 @@
 ---
-title: Glossary
+title: Glossary & Index
 description: Glossary of terms used throughout the MyST ecosystem.
 ---
+
+(glossary-page)=
+
+## Glossary
 
 :::{glossary}
 
@@ -10,8 +14,11 @@ description: Glossary of terms used throughout the MyST ecosystem.
 It is the base flavour of Markdown for Jupyter Notebook, and the base flavour
 for {term}`MyST Markdown <MyST>` and {term}`Jupyter Book`.
 
+[Project Jupyter](https://jupyter.org)
+: The project and [team](https://compass.jupyterbook.org/team) that supports {term}`Jupyter Book` and {term}`MyST Markdown <MyST>` and the tools and packages behind them.
+
 [ExecutableBookProject](https://executablebooks.org)
-: The project and [team](https://compass.executablebooks.org/en/latest/team/index.html) that supports {term}`Jupyter Book` and {term}`MyST Markdown <MyST>` and the tools and packages behind them.
+: The project and [team](https://compass.executablebooks.org/en/latest/team/index.html) that used to support {term}`Jupyter Book` and {term}`MyST Markdown <MyST>`. The project is currently stewarded by {term}`Project Jupyter`.
 
 [MyST Markdown](https://mystmd.org)
 : A flavour of Markdown that was designed for scientific and technical writing.
@@ -58,3 +65,11 @@ users. It can be deployed in the cloud, or on your own hardware.
 in markdown and Jupyter Notebooks, execute content and insert it into your book,
 and build a variety of outputs for interactivity and document publishing.
 :::
+
+(index-page)=
+
+## Index
+
+```{show-index}
+
+```
